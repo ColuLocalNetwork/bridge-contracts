@@ -15,6 +15,9 @@ const oneEther = web3.toBigNumber(web3.toWei(1, "ether"));
 const halfEther = web3.toBigNumber(web3.toWei(0.5, "ether"));
 const executionDailyLimit = oneEther
 const executionMaxPerTx = halfEther
+const ethUtils = require('ethereumjs-util');
+const truffleAssert = require('truffle-assertions')
+
 
 async function testERC677BridgeToken(accounts, rewardable) {
   let token
@@ -488,6 +491,92 @@ async function testERC677BridgeToken(accounts, rewardable) {
       (await token.balanceOf(user)).should.be.bignumber.equal(0);
       tokenTransfer.logs[0].event.should.be.equal("Transfer")
       tokenTransfer2.logs[0].event.should.be.equal("Transfer")
+    })
+  })
+
+  describe('#transferPreSigned', async () => {
+    const alice = accounts[10];  // has no ETH
+    const bob = accounts[9];     // has 1M ETH
+    const charlie = accounts[8]; // has 1M ETH
+
+    const formattedAddress = address => Buffer.from(ethUtils.stripHexPrefix(address), 'hex');
+    const formattedInt = int => ethUtils.setLengthLeft(int, 32);
+    const formattedBytes32 = bytes => ethUtils.addHexPrefix(bytes.toString('hex'));
+    const hashedTightPacked = args => ethUtils.sha3(Buffer.concat(args));
+
+    beforeEach(async () => {
+      await token.mint(alice, 100, {from: owner }).should.be.fulfilled;
+    })
+
+    it('Charlie transfers 90 tokens from Alice to Bob (and gets 10 as fee)', async () => {
+      const from = alice;
+      const to = bob;
+      const delegate = charlie;
+      const fee = 10;
+      const amount = 90;
+      const nonce = await web3.eth.getTransactionCount(charlie);
+      const alicePrivateKey = Buffer.from('2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501210', 'hex');
+
+      (await token.balanceOf(alice)).should.be.bignumber.equal(100);
+      (await token.balanceOf(bob)).should.be.bignumber.equal(0);
+      (await token.balanceOf(charlie)).should.be.bignumber.equal(0);
+
+      const components = [
+        Buffer.from('0d98dcb1', 'hex'), // getTransferPreSignedHash(address,address,uint256,uint256,uint256)
+        formattedAddress(token.address),
+        formattedAddress(to),
+        formattedInt(amount),
+        formattedInt(fee),
+        formattedInt(nonce)
+      ];
+
+      const vrs = ethUtils.ecsign(hashedTightPacked(components), alicePrivateKey);
+      const sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
+      const tx = await token.transferPreSigned(sig, to, amount, fee, nonce, {from: charlie})
+
+      truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
+        return ev.from === alice && ev.to === bob && ev.value.toNumber() === amount;
+      });
+
+      truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
+        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee;
+      });
+
+      truffleAssert.eventEmitted(tx, 'TransferPreSigned', (ev) => {
+        return ev.from === alice && ev.to === bob && ev.delegate === charlie && ev.amount.toNumber() === amount && ev.fee.toNumber() === fee;
+      });
+
+      (await token.balanceOf(alice)).should.be.bignumber.equal(0);
+      (await token.balanceOf(bob)).should.be.bignumber.equal(90);
+      (await token.balanceOf(charlie)).should.be.bignumber.equal(10);
+    })
+
+    it('Someone tries to replay transfer and fails', async () => {
+      const from = alice;
+      const to = bob;
+      const delegate = charlie;
+      const fee = 10;
+      const amount = 90;
+      const nonce = await web3.eth.getTransactionCount(charlie);
+      const alicePrivateKey = Buffer.from('2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501210', 'hex');
+
+      const components = [
+        Buffer.from('0d98dcb1', 'hex'), // getTransferPreSignedHash(address,address,uint256,uint256,uint256)
+        formattedAddress(token.address),
+        formattedAddress(to),
+        formattedInt(amount),
+        formattedInt(fee),
+        formattedInt(nonce)
+      ];
+
+      const vrs = ethUtils.ecsign(hashedTightPacked(components), alicePrivateKey);
+      const sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
+      try {
+        const tx = await token.transferPreSigned(sig, to, amount, fee, nonce, {from: charlie});
+        assert.equal(tx.receipt.status, '0x00');
+      } catch (error) {
+        // console.log(`error:${error}`);
+      }
     })
   })
 }

@@ -4,14 +4,17 @@ import "openzeppelin-solidity/contracts/token/ERC20/BurnableToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
 import "./IBurnableMintableERC677Token.sol";
+import "./IERC865.sol";
 import "./ERC677Receiver.sol";
+import "./libraries/Message.sol";
 
 
 contract ERC677BridgeToken is
     IBurnableMintableERC677Token,
     DetailedERC20,
     BurnableToken,
-    MintableToken {
+    MintableToken,
+    IERC865 {
 
     address public bridgeContract;
 
@@ -104,5 +107,42 @@ contract ERC677BridgeToken is
         require(token.transfer(_to, balance));
     }
 
+    /**
+     * @param _signature bytes The signature, issued by the owner.
+     * @param _to address The address which you want to transfer to.
+     * @param _value uint256 The amount of tokens to be transferred.
+     * @param _fee uint256 The amount of tokens paid to msg.sender, by the owner.
+     * @param _nonce uint256 Presigned transaction number. Should be unique, per user.
+     */
+    function transferPreSigned(bytes _signature, address _to, uint256 _value, uint256 _fee, uint256 _nonce) public returns (bool) {
+        require(_to != address(0), "Invalid _to address");
 
+        bytes32 hashedParams = getTransferPreSignedHash(address(this), _to, _value, _fee, _nonce);
+        address from = Message.recover(hashedParams, _signature);
+        require(from != address(0), "Invalid from address recovered");
+        bytes32 hashedTx = keccak256(abi.encodePacked(from, hashedParams));
+        require(hashedTxs[hashedTx] == false, "Transaction hash was already used");
+
+        balances[from] = balances[from].sub(_value).sub(_fee);
+        balances[_to] = balances[_to].add(_value);
+        balances[msg.sender] = balances[msg.sender].add(_fee);
+        hashedTxs[hashedTx] = true;
+
+        emit Transfer(from, _to, _value);
+        emit Transfer(from, msg.sender, _fee);
+        emit TransferPreSigned(from, _to, msg.sender, _value, _fee);
+        return true;
+    }
+
+    /**
+     * @param _token address The address of the token.
+     * @param _to address The address which you want to transfer to.
+     * @param _value uint256 The amount of tokens to be transferred.
+     * @param _fee uint256 The amount of tokens paid to msg.sender, by the owner.
+     * @param _nonce uint256 Presigned transaction number.
+     */
+    function getTransferPreSignedHash(address _token, address _to, uint256 _value, uint256 _fee, uint256 _nonce) public pure returns (bytes32) {
+        /* "0d98dcb1": getTransferPreSignedHash(address,address,uint256,uint256,uint256) */
+        return keccak256(abi.encodePacked(bytes4(0x0d98dcb1), _token, _to, _value, _fee, _nonce));
+    }
 }
