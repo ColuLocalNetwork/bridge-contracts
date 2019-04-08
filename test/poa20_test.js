@@ -555,9 +555,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
       try {
         const tx = await token.transferPreSigned(sig, to, amount, fee, nonce, {from: charlie});
         assert.equal(tx.receipt.status, '0x00');
-      } catch (error) {
-        // console.log(`error:${error}`);
-      }
+      } catch (error) {}
     })
   })
 }
