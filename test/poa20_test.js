@@ -514,7 +514,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
       const delegate = charlie;
       const fee = 10;
       const amount = 90;
-      const nonce = await web3.eth.getTransactionCount(charlie);
+      const nonce = await web3.eth.getTransactionCount(alice);
       const alicePrivateKey = Buffer.from('2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501210', 'hex');
 
       (await token.balanceOf(alice)).should.be.bignumber.equal(100);
@@ -557,7 +557,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
       const delegate = charlie;
       const fee = 10;
       const amount = 90;
-      const nonce = await web3.eth.getTransactionCount(charlie);
+      const nonce = await web3.eth.getTransactionCount(alice);
       const alicePrivateKey = Buffer.from('2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501210', 'hex');
 
       const components = [
