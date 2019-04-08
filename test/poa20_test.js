@@ -499,10 +499,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
     const bob = accounts[9];     // has 1M ETH
     const charlie = accounts[8]; // has 1M ETH
 
-    const formattedAddress = address => Buffer.from(ethUtils.stripHexPrefix(address), 'hex');
-    const formattedInt = int => ethUtils.setLengthLeft(int, 32);
-    const formattedBytes32 = bytes => ethUtils.addHexPrefix(bytes.toString('hex'));
-    const hashedTightPacked = args => ethUtils.sha3(Buffer.concat(args));
+    const toBufferStripPrefix = str => Buffer.from(ethUtils.stripHexPrefix(str), 'hex');
 
     beforeEach(async () => {
       await token.mint(alice, 100, {from: owner }).should.be.fulfilled;
@@ -515,22 +512,14 @@ async function testERC677BridgeToken(accounts, rewardable) {
       const fee = 10;
       const amount = 90;
       const nonce = await web3.eth.getTransactionCount(alice);
-      const alicePrivateKey = Buffer.from('2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501210', 'hex');
+      const alicePrivateKey = toBufferStripPrefix('0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501210');
 
       (await token.balanceOf(alice)).should.be.bignumber.equal(100);
       (await token.balanceOf(bob)).should.be.bignumber.equal(0);
       (await token.balanceOf(charlie)).should.be.bignumber.equal(0);
 
-      const components = [
-        Buffer.from('0d98dcb1', 'hex'), // getTransferPreSignedHash(address,address,uint256,uint256,uint256)
-        formattedAddress(token.address),
-        formattedAddress(to),
-        formattedInt(amount),
-        formattedInt(fee),
-        formattedInt(nonce)
-      ];
-
-      const vrs = ethUtils.ecsign(hashedTightPacked(components), alicePrivateKey);
+      const msg = await token.getTransferPreSignedHash(token.address, to, amount, fee, nonce)
+      const vrs = ethUtils.ecsign(toBufferStripPrefix(msg), alicePrivateKey);
       const sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
       const tx = await token.transferPreSigned(sig, to, amount, fee, nonce, {from: charlie})
 
@@ -560,16 +549,8 @@ async function testERC677BridgeToken(accounts, rewardable) {
       const nonce = await web3.eth.getTransactionCount(alice);
       const alicePrivateKey = Buffer.from('2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501210', 'hex');
 
-      const components = [
-        Buffer.from('0d98dcb1', 'hex'), // getTransferPreSignedHash(address,address,uint256,uint256,uint256)
-        formattedAddress(token.address),
-        formattedAddress(to),
-        formattedInt(amount),
-        formattedInt(fee),
-        formattedInt(nonce)
-      ];
-
-      const vrs = ethUtils.ecsign(hashedTightPacked(components), alicePrivateKey);
+      const msg = await token.getTransferPreSignedHash(token.address, to, amount, fee, nonce)
+      const vrs = ethUtils.ecsign(toBufferStripPrefix(msg), alicePrivateKey);
       const sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
       try {
         const tx = await token.transferPreSigned(sig, to, amount, fee, nonce, {from: charlie});
