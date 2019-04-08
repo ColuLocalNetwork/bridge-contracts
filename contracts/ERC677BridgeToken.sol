@@ -127,6 +127,7 @@ contract ERC677BridgeToken is
         balances[_to] = balances[_to].add(_value);
         balances[msg.sender] = balances[msg.sender].add(_fee);
         hashedTxs[hashedTx] = true;
+        noncePerAddress[from] = noncePerAddress[from].add(1);
 
         emit Transfer(from, _to, _value);
         emit Transfer(from, msg.sender, _fee);
@@ -144,5 +145,12 @@ contract ERC677BridgeToken is
     function getTransferPreSignedHash(address _token, address _to, uint256 _value, uint256 _fee, uint256 _nonce) public pure returns (bytes32) {
         /* "0d98dcb1": getTransferPreSignedHash(address,address,uint256,uint256,uint256) */
         return keccak256(abi.encodePacked(bytes4(0x0d98dcb1), _token, _to, _value, _fee, _nonce));
+    }
+
+    /**
+    * @param _address The address of which the next nonce is requested
+    */
+    function getNextNonceForAddress(address _address) public view returns (uint256) {
+        return noncePerAddress[_address];
     }
 }

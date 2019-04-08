@@ -505,23 +505,21 @@ async function testERC677BridgeToken(accounts, rewardable) {
       await token.mint(alice, 100, {from: owner }).should.be.fulfilled;
     })
 
-    it('Charlie transfers 90 tokens from Alice to Bob (and gets 10 as fee)', async () => {
-      const from = alice;
-      const to = bob;
-      const delegate = charlie;
+    it('Charlie transfers 90 tokens from Alice to Bob and gets 10 as fee', async () => {
       const fee = 10;
       const amount = 90;
-      const nonce = await web3.eth.getTransactionCount(alice);
+      const nonce = await token.getNextNonceForAddress(alice);
       const alicePrivateKey = toBufferStripPrefix('0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501210');
 
       (await token.balanceOf(alice)).should.be.bignumber.equal(100);
       (await token.balanceOf(bob)).should.be.bignumber.equal(0);
       (await token.balanceOf(charlie)).should.be.bignumber.equal(0);
+      nonce.should.be.bignumber.equal(0);
 
-      const msg = await token.getTransferPreSignedHash(token.address, to, amount, fee, nonce)
+      const msg = await token.getTransferPreSignedHash(token.address, bob, amount, fee, nonce)
       const vrs = ethUtils.ecsign(toBufferStripPrefix(msg), alicePrivateKey);
       const sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
-      const tx = await token.transferPreSigned(sig, to, amount, fee, nonce, {from: charlie})
+      const tx = await token.transferPreSigned(sig, bob, amount, fee, nonce, {from: charlie})
 
       truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
         return ev.from === alice && ev.to === bob && ev.value.toNumber() === amount;
@@ -538,22 +536,20 @@ async function testERC677BridgeToken(accounts, rewardable) {
       (await token.balanceOf(alice)).should.be.bignumber.equal(0);
       (await token.balanceOf(bob)).should.be.bignumber.equal(90);
       (await token.balanceOf(charlie)).should.be.bignumber.equal(10);
+      (await token.getNextNonceForAddress(alice)).should.be.bignumber.equal(1);
     })
 
-    it('Someone tries to replay transfer and fails', async () => {
-      const from = alice;
-      const to = bob;
-      const delegate = charlie;
+    it('Someone tries to replay transfer (using same values) and fails', async () => {
       const fee = 10;
       const amount = 90;
-      const nonce = await web3.eth.getTransactionCount(alice);
+      const nonce = 0;
       const alicePrivateKey = Buffer.from('2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501210', 'hex');
 
-      const msg = await token.getTransferPreSignedHash(token.address, to, amount, fee, nonce)
+      const msg = await token.getTransferPreSignedHash(token.address, bob, amount, fee, nonce)
       const vrs = ethUtils.ecsign(toBufferStripPrefix(msg), alicePrivateKey);
       const sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
       try {
-        const tx = await token.transferPreSigned(sig, to, amount, fee, nonce, {from: charlie});
+        const tx = await token.transferPreSigned(sig, bob, amount, fee, nonce, {from: charlie});
         assert.equal(tx.receipt.status, '0x00');
       } catch (error) {}
     })
