@@ -4,7 +4,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/BurnableToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
 import "./IBurnableMintableERC677Token.sol";
-import "./IERC865.sol";
+import "./ERC865.sol";
 import "./ERC677Receiver.sol";
 import "./libraries/Message.sol";
 
@@ -14,7 +14,7 @@ contract ERC677BridgeToken is
     DetailedERC20,
     BurnableToken,
     MintableToken,
-    IERC865 {
+    ERC865 {
 
     address public bridgeContract;
 
@@ -107,13 +107,6 @@ contract ERC677BridgeToken is
         require(token.transfer(_to, balance));
     }
 
-    /**
-     * @param _signature bytes The signature, issued by the owner.
-     * @param _to address The address which you want to transfer to.
-     * @param _value uint256 The amount of tokens to be transferred.
-     * @param _fee uint256 The amount of tokens paid to msg.sender, by the owner.
-     * @param _timestamp uint256 Timestamp of transaction, for uniqueness.
-     */
     function transferPreSigned(bytes _signature, address _to, uint256 _value, uint256 _fee, uint256 _timestamp) public returns (bool) {
         require(_to != address(0), "Invalid _to address");
 
@@ -134,13 +127,6 @@ contract ERC677BridgeToken is
         return true;
     }
 
-    /**
-     * @param _token address The address of the token.
-     * @param _to address The address which you want to transfer to.
-     * @param _value uint256 The amount of tokens to be transferred.
-     * @param _fee uint256 The amount of tokens paid to msg.sender, by the owner.
-     * @param _timestamp uint256 Timestamp of transaction, for uniqueness.
-     */
     function getTransferPreSignedHash(address _token, address _to, uint256 _value, uint256 _fee, uint256 _timestamp) public pure returns (bytes32) {
         /* "0d98dcb1": getTransferPreSignedHash(address,address,uint256,uint256,uint256) */
         return keccak256(abi.encodePacked(bytes4(0x0d98dcb1), _token, _to, _value, _fee, _timestamp));
