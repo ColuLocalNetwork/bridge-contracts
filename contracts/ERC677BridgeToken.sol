@@ -120,6 +120,7 @@ contract ERC677BridgeToken is
         bytes32 hashedParams = getTransferPreSignedHash(address(this), _to, _value, _fee, _nonce);
         address from = Message.recover(hashedParams, _signature);
         require(from != address(0), "Invalid from address recovered");
+        require(_nonce == noncePerAddress[from], "Transaction nonce was already used");
         bytes32 hashedTx = keccak256(abi.encodePacked(from, hashedParams));
         require(hashedTxs[hashedTx] == false, "Transaction hash was already used");
 
