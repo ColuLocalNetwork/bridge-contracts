@@ -112,15 +112,14 @@ contract ERC677BridgeToken is
      * @param _to address The address which you want to transfer to.
      * @param _value uint256 The amount of tokens to be transferred.
      * @param _fee uint256 The amount of tokens paid to msg.sender, by the owner.
-     * @param _nonce uint256 Presigned transaction number. Should be unique, per user.
+     * @param _timestamp uint256 Timestamp of transaction, for uniqueness.
      */
-    function transferPreSigned(bytes _signature, address _to, uint256 _value, uint256 _fee, uint256 _nonce) public returns (bool) {
+    function transferPreSigned(bytes _signature, address _to, uint256 _value, uint256 _fee, uint256 _timestamp) public returns (bool) {
         require(_to != address(0), "Invalid _to address");
 
-        bytes32 hashedParams = getTransferPreSignedHash(address(this), _to, _value, _fee, _nonce);
+        bytes32 hashedParams = getTransferPreSignedHash(address(this), _to, _value, _fee, _timestamp);
         address from = Message.recover(hashedParams, _signature);
         require(from != address(0), "Invalid from address recovered");
-        require(_nonce == noncePerAddress[from], "Transaction nonce was already used");
         bytes32 hashedTx = keccak256(abi.encodePacked(from, hashedParams));
         require(hashedTxs[hashedTx] == false, "Transaction hash was already used");
 
@@ -128,7 +127,6 @@ contract ERC677BridgeToken is
         balances[_to] = balances[_to].add(_value);
         balances[msg.sender] = balances[msg.sender].add(_fee);
         hashedTxs[hashedTx] = true;
-        noncePerAddress[from] = noncePerAddress[from].add(1);
 
         emit Transfer(from, _to, _value);
         emit Transfer(from, msg.sender, _fee);
@@ -141,17 +139,10 @@ contract ERC677BridgeToken is
      * @param _to address The address which you want to transfer to.
      * @param _value uint256 The amount of tokens to be transferred.
      * @param _fee uint256 The amount of tokens paid to msg.sender, by the owner.
-     * @param _nonce uint256 Presigned transaction number.
+     * @param _timestamp uint256 Timestamp of transaction, for uniqueness.
      */
-    function getTransferPreSignedHash(address _token, address _to, uint256 _value, uint256 _fee, uint256 _nonce) public pure returns (bytes32) {
+    function getTransferPreSignedHash(address _token, address _to, uint256 _value, uint256 _fee, uint256 _timestamp) public pure returns (bytes32) {
         /* "0d98dcb1": getTransferPreSignedHash(address,address,uint256,uint256,uint256) */
-        return keccak256(abi.encodePacked(bytes4(0x0d98dcb1), _token, _to, _value, _fee, _nonce));
-    }
-
-    /**
-    * @param _address The address of which the next nonce is requested
-    */
-    function getNextNonceForAddress(address _address) public view returns (uint256) {
-        return noncePerAddress[_address];
+        return keccak256(abi.encodePacked(bytes4(0x0d98dcb1), _token, _to, _value, _fee, _timestamp));
     }
 }
