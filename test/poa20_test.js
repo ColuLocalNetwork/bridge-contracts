@@ -501,17 +501,23 @@ async function testERC677BridgeToken(accounts, rewardable) {
     const bob = accounts[9];     // has 1M ETH
     const charlie = accounts[8]; // has 1M ETH
 
-    const fee = 10;
-    const amount = 90;
+    const _fee = 0.1;
+    const _amount = 0.9;
+
+    const fee = web3.toBigNumber(web3.toWei(_fee, "ether"));
+    const halfFee = web3.toBigNumber(web3.toWei(_fee/2, "ether"));
+    const amount = web3.toBigNumber(web3.toWei(_amount, "ether"));
+    const halfAmount = web3.toBigNumber(web3.toWei(_amount/2, "ether"));
+    const total = web3.toBigNumber(web3.toWei(_fee + _amount, "ether"));
 
     beforeEach(async () => {
-      await token.mint(alice, amount + fee, {from: owner }).should.be.fulfilled;
+      await token.mint(alice, total, {from: owner }).should.be.fulfilled;
     })
 
     it('Send tokens to recipient and pay gas in tokens to 3rd party', async () => {
       const timestamp = +new Date();
 
-      (await token.balanceOf(alice)).should.be.bignumber.equal(amount + fee);
+      (await token.balanceOf(alice)).should.be.bignumber.equal(total);
       (await token.balanceOf(bob)).should.be.bignumber.equal(0);
       (await token.balanceOf(charlie)).should.be.bignumber.equal(0);
 
@@ -521,15 +527,15 @@ async function testERC677BridgeToken(accounts, rewardable) {
       const tx = await token.transferPreSigned(sig, bob, amount, fee, timestamp, {from: charlie})
 
       truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === bob && ev.value.toNumber() === amount;
+        return ev.from === alice && ev.to === bob && ev.value.toNumber() === amount.toNumber();
       });
 
       truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee;
+        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee.toNumber();
       });
 
       truffleAssert.eventEmitted(tx, 'TransferPreSigned', (ev) => {
-        return ev.from === alice && ev.to === bob && ev.delegate === charlie && ev.amount.toNumber() === amount && ev.fee.toNumber() === fee;
+        return ev.from === alice && ev.to === bob && ev.delegate === charlie && ev.amount.toNumber() === amount.toNumber() && ev.fee.toNumber() === fee.toNumber();
       });
 
       (await token.balanceOf(alice)).should.be.bignumber.equal(0);
@@ -564,15 +570,15 @@ async function testERC677BridgeToken(accounts, rewardable) {
       const tx = await token.transferPreSigned(sig, receiver.address, amount, fee, timestamp, {from: charlie})
 
       truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === receiver.address && ev.value.toNumber() === amount;
+        return ev.from === alice && ev.to === receiver.address && ev.value.toNumber() === amount.toNumber();
       });
 
       truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee;
+        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee.toNumber();
       });
 
       truffleAssert.eventEmitted(tx, 'TransferPreSigned', (ev) => {
-        return ev.from === alice && ev.to === receiver.address && ev.delegate === charlie && ev.amount.toNumber() === amount && ev.fee.toNumber() === fee;
+        return ev.from === alice && ev.to === receiver.address && ev.delegate === charlie && ev.amount.toNumber() === amount.toNumber() && ev.fee.toNumber() === fee.toNumber();
       });
 
       (await token.balanceOf(receiver.address)).should.be.bignumber.equal(amount);
@@ -588,41 +594,41 @@ async function testERC677BridgeToken(accounts, rewardable) {
 
       const someContract = await tokenContract.new("Some", "Token", 18);
 
-      const msg1 = await token.getTransferPreSignedHash(token.address, someContract.address, amount/2, fee/2, timestamp);
+      const msg1 = await token.getTransferPreSignedHash(token.address, someContract.address, halfAmount, halfFee, timestamp);
       const vrs1 = ethUtils.ecsign(toBufferStripPrefix(msg1), alicePrivateKey);
       const sig1 = ethUtils.toRpcSig(vrs1.v, vrs1.r, vrs1.s);
-      const tx1 = await token.transferPreSigned(sig1, someContract.address, amount/2, fee/2, timestamp, {from: charlie});
+      const tx1 = await token.transferPreSigned(sig1, someContract.address, halfAmount, halfFee, timestamp, {from: charlie});
 
-      const msg2 = await token.getTransferPreSignedHash(token.address, accounts[0], amount/2, fee/2, timestamp);
+      const msg2 = await token.getTransferPreSignedHash(token.address, accounts[0], halfAmount, halfFee, timestamp);
       const vrs2 = ethUtils.ecsign(toBufferStripPrefix(msg2), alicePrivateKey);
       const sig2 = ethUtils.toRpcSig(vrs2.v, vrs2.r, vrs2.s);
-      const tx2 = await token.transferPreSigned(sig2, accounts[0], amount/2, fee/2, timestamp, {from: charlie});
+      const tx2 = await token.transferPreSigned(sig2, accounts[0], halfAmount, halfFee, timestamp, {from: charlie});
 
       truffleAssert.eventEmitted(tx1, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === someContract.address && ev.value.toNumber() === amount/2;
+        return ev.from === alice && ev.to === someContract.address && ev.value.toNumber() === halfAmount.toNumber();
       });
 
       truffleAssert.eventEmitted(tx1, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee/2;
+        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === halfFee.toNumber();
       });
 
       truffleAssert.eventEmitted(tx1, 'TransferPreSigned', (ev) => {
-        return ev.from === alice && ev.to === someContract.address && ev.delegate === charlie && ev.amount.toNumber() === amount/2 && ev.fee.toNumber() === fee/2;
+        return ev.from === alice && ev.to === someContract.address && ev.delegate === charlie && ev.amount.toNumber() === halfAmount.toNumber() && ev.fee.toNumber() === halfFee.toNumber();
       });
 
       truffleAssert.eventEmitted(tx2, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === accounts[0] && ev.value.toNumber() === amount/2;
+        return ev.from === alice && ev.to === accounts[0] && ev.value.toNumber() === halfAmount.toNumber();
       });
 
       truffleAssert.eventEmitted(tx2, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee/2;
+        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === halfFee.toNumber();
       });
 
       truffleAssert.eventEmitted(tx2, 'TransferPreSigned', (ev) => {
-        return ev.from === alice && ev.to === accounts[0] && ev.delegate === charlie && ev.amount.toNumber() === amount/2 && ev.fee.toNumber() === fee/2;
+        return ev.from === alice && ev.to === accounts[0] && ev.delegate === charlie && ev.amount.toNumber() === halfAmount.toNumber() && ev.fee.toNumber() === halfFee.toNumber();
       });
 
-      (await token.balanceOf(someContract.address)).should.be.bignumber.equal(amount/2);
+      (await token.balanceOf(someContract.address)).should.be.bignumber.equal(halfAmount);
       (await token.balanceOf(alice)).should.be.bignumber.equal(0);
     })
   })
@@ -633,13 +639,19 @@ async function testERC677BridgeToken(accounts, rewardable) {
     const bob = accounts[9];     // has 1M ETH
     const charlie = accounts[8]; // has 1M ETH
 
-    const fee = 10;
-    const amount = 90;
+    const _fee = 0.1;
+    const _amount = 0.9;
+
+    const fee = web3.toBigNumber(web3.toWei(_fee, "ether"));
+    const halfFee = web3.toBigNumber(web3.toWei(_fee/2, "ether"));
+    const amount = web3.toBigNumber(web3.toWei(_amount, "ether"));
+    const halfAmount = web3.toBigNumber(web3.toWei(_amount/2, "ether"));
+    const total = web3.toBigNumber(web3.toWei(_fee + _amount, "ether"));
 
     let homeErcToErcContract, foreignNativeToErcBridge, validatorContract;
 
     beforeEach(async () => {
-      await token.mint(alice, amount + fee, {from: owner }).should.be.fulfilled;
+      await token.mint(alice, total, {from: owner }).should.be.fulfilled;
       validatorContract = await BridgeValidators.new()
       const authorities = [accounts[2]];
       await validatorContract.initialize(1, authorities, owner)
@@ -678,15 +690,13 @@ async function testERC677BridgeToken(accounts, rewardable) {
       const tx = await token.transferAndCallPreSigned(sig, receiver.address, amount, callDoSomething123, fee, timestamp, {from: charlie});
 
       truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === receiver.address && ev.value.toNumber() === amount;
+        return ev.from === alice && ev.to === receiver.address && ev.value.toNumber() === amount.toNumber();
       });
-
       truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee;
+        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee.toNumber();
       });
-
       truffleAssert.eventEmitted(tx, 'TransferAndCallPreSigned', (ev) => {
-        return ev.from === alice && ev.to === receiver.address && ev.delegate === charlie && ev.amount.toNumber() === amount && ev.data === callDoSomething123 && ev.fee.toNumber() === fee;
+        return ev.from === alice && ev.to === receiver.address && ev.delegate === charlie && ev.amount.toNumber() === amount.toNumber() && ev.data === callDoSomething123 && ev.fee.toNumber() === fee.toNumber();
       });
 
       (await token.balanceOf(receiver.address)).should.be.bignumber.equal(amount);
@@ -701,34 +711,33 @@ async function testERC677BridgeToken(accounts, rewardable) {
       const timestamp = +new Date();
 
       await token.setBridgeContract(homeErcToErcContract.address).should.be.fulfilled;
-      const msg1 = await token.getTransferAndCallPreSignedHash(token.address, homeErcToErcContract.address, amount/2, '0x', fee/2, timestamp);
+      const msg1 = await token.getTransferAndCallPreSignedHash(token.address, homeErcToErcContract.address, halfAmount, '0x', halfFee, timestamp);
       const vrs1 = ethUtils.ecsign(toBufferStripPrefix(msg1), alicePrivateKey);
       const sig1 = ethUtils.toRpcSig(vrs1.v, vrs1.r, vrs1.s);
-      const tx1 = await token.transferAndCallPreSigned(sig1, homeErcToErcContract.address, amount/2, '0x', fee/2, timestamp, {from: charlie});
+      const tx1 = await token.transferAndCallPreSigned(sig1, homeErcToErcContract.address, halfAmount, '0x', halfFee, timestamp, {from: charlie});
       truffleAssert.eventEmitted(tx1, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === homeErcToErcContract.address && ev.value.toNumber() === amount/2;
+        return ev.from === alice && ev.to === homeErcToErcContract.address && ev.value.toNumber() === halfAmount.toNumber();
       });
       truffleAssert.eventEmitted(tx1, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee/2;
+        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === halfFee.toNumber();
       });
       truffleAssert.eventEmitted(tx1, 'TransferAndCallPreSigned', (ev) => {
-        return ev.from === alice && ev.to === homeErcToErcContract.address && ev.delegate === charlie && ev.amount.toNumber() === amount/2 && ev.data === '0x' && ev.fee.toNumber() === fee/2;
+        return ev.from === alice && ev.to === homeErcToErcContract.address && ev.delegate === charlie && ev.amount.toNumber() === halfAmount.toNumber() && ev.data === '0x' && ev.fee.toNumber() === halfFee.toNumber();
       });
-
 
       await token.setBridgeContract(foreignNativeToErcBridge.address).should.be.fulfilled;
-      const msg2 = await token.getTransferAndCallPreSignedHash(token.address, foreignNativeToErcBridge.address, amount/2, '0x', fee/2, timestamp);
+      const msg2 = await token.getTransferAndCallPreSignedHash(token.address, foreignNativeToErcBridge.address, halfAmount, '0x', halfFee, timestamp);
       const vrs2 = ethUtils.ecsign(toBufferStripPrefix(msg2), alicePrivateKey);
       const sig2 = ethUtils.toRpcSig(vrs2.v, vrs2.r, vrs2.s);
-      const tx2 = await token.transferAndCallPreSigned(sig2, foreignNativeToErcBridge.address, amount/2, '0x', fee/2, timestamp, {from: charlie});
+      const tx2 = await token.transferAndCallPreSigned(sig2, foreignNativeToErcBridge.address, halfAmount, '0x', halfFee, timestamp, {from: charlie});
       truffleAssert.eventEmitted(tx2, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === foreignNativeToErcBridge.address && ev.value.toNumber() === amount/2;
+        return ev.from === alice && ev.to === foreignNativeToErcBridge.address && ev.value.toNumber() === halfAmount.toNumber();
       });
       truffleAssert.eventEmitted(tx2, 'Transfer', (ev) => {
-        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee/2;
+        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === halfFee.toNumber();
       });
       truffleAssert.eventEmitted(tx2, 'TransferAndCallPreSigned', (ev) => {
-        return ev.from === alice && ev.to === foreignNativeToErcBridge.address && ev.delegate === charlie && ev.amount.toNumber() === amount/2 && ev.data === '0x' && ev.fee.toNumber() === fee/2;
+        return ev.from === alice && ev.to === foreignNativeToErcBridge.address && ev.delegate === charlie && ev.amount.toNumber() === halfAmount.toNumber() && ev.data === '0x' && ev.fee.toNumber() === halfFee.toNumber();
       });
     })
 
@@ -744,7 +753,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
 
     it('fails to send tokens to bridge contract out of limits', async () => {
       const timestamp = +new Date();
-      const lessThanMin = 0.0001
+      const lessThanMin = web3.toBigNumber(web3.toWei(0.0001, "ether"));
 
       let msg = await token.getTransferAndCallPreSignedHash(token.address, homeErcToErcContract.address, lessThanMin, '0x', fee, timestamp);
       let vrs = ethUtils.ecsign(toBufferStripPrefix(msg), alicePrivateKey);
