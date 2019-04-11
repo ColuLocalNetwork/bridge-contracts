@@ -1,3 +1,5 @@
+const ethUtils = require('ethereumjs-util');
+
 // returns a Promise that resolves with a hex string that is the signature of
 // `data` signed with the key of `address`
 function sign(address, data) {
@@ -116,3 +118,8 @@ function getEventFromLogs(logs, eventName) {
   return logs.filter(log => log.event === eventName)[0]
 }
 module.exports.getEventFromLogs = getEventFromLogs;
+
+function toBufferStripPrefix (str) {
+  return Buffer.from(ethUtils.stripHexPrefix(str), 'hex')
+}
+module.exports.toBufferStripPrefix = toBufferStripPrefix;
