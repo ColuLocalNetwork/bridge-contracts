@@ -5,6 +5,7 @@ contract ERC865 is ERC20 {
     mapping(bytes32 => bool) hashedTxs;
 
     event TransferPreSigned(address indexed from, address indexed to, address indexed delegate, uint256 amount, uint256 fee);
+    event TransferAndCallPreSigned(address indexed from, address indexed to, address indexed delegate, uint256 amount, bytes data, uint256 fee);
 
     /**
      * @param _signature bytes The signature, issued by the owner.

@@ -148,4 +148,26 @@ contract ERC677BridgeToken is
         /* "0d98dcb1": getTransferPreSignedHash(address,address,uint256,uint256,uint256) */
         return keccak256(abi.encodePacked(bytes4(0x0d98dcb1), _token, _to, _value, _fee, _timestamp));
     }
+
+    function transferAndCallPreSigned(bytes _signature, address _to, uint256 _value, bytes _data, uint256 _fee, uint256 _timestamp) validRecipient(_to) public returns (bool) {
+        bytes32 hashedParams = getTransferAndCallPreSignedHash(address(this), _to, _value, _data, _fee, _timestamp);
+        address from = Message.recover(hashedParams, _signature);
+        require(from != address(0), "Invalid from address recovered");
+        bytes32 hashedTx = keccak256(abi.encodePacked(from, hashedParams));
+        require(hashedTxs[hashedTx] == false, "Transaction hash was already used");
+
+        require(transferWithFee(msg.sender, from, _to, _value, _fee));
+        hashedTxs[hashedTx] = true;
+        emit TransferAndCallPreSigned(from, _to, msg.sender, _value, _data, _fee);
+
+        if (isContract(_to)) {
+            require(contractFallbackFrom(from, _to, _value, _data));
+        }
+        return true;
+    }
+
+    function getTransferAndCallPreSignedHash(address _token, address _to, uint256 _value, bytes _data, uint256 _fee, uint256 _timestamp) public pure returns (bytes32) {
+        /* "cabc0a10": getTransferPreSignedHash(address,address,uint256,uint256,uint256) */
+        return keccak256(abi.encodePacked(bytes4(0xcabc0a10), _token, _to, _value, _data, _fee, _timestamp));
+    }
 }

@@ -169,7 +169,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
 
         await token.setBlockRewardContractMock(accounts[4]).should.be.fulfilled;
         await token.mintReward([user1, user2, user3], [100, 200, 300], {from: accounts[4] }).should.be.fulfilled;
-        
+
         assert.equal(await token.totalSupply(), 600);
         (await token.balanceOf(user1)).should.be.bignumber.equal(100);
         (await token.balanceOf(user2)).should.be.bignumber.equal(200);
@@ -387,7 +387,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
     })
     it('calls contractFallback', async () => {
       const receiver = await ERC677ReceiverTest.new();
-      (await receiver.from()).should.be.equal('0x0000000000000000000000000000000000000000');
+      (await receiver.from()).should.be.equal(ZERO_ADDRESS);
       (await receiver.value()).should.be.bignumber.equal('0');
       (await receiver.data()).should.be.equal('0x');
       (await receiver.someVar()).should.be.bignumber.equal('0');
@@ -398,7 +398,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
 
       await token.mint(user, 1, {from: owner }).should.be.fulfilled;
       await token.transferAndCall(token.address, 1, callDoSomething123, {from: user}).should.be.rejectedWith(ERROR_MSG);
-      await token.transferAndCall('0x0000000000000000000000000000000000000000', 1, callDoSomething123, {from: user}).should.be.rejectedWith(ERROR_MSG);
+      await token.transferAndCall(ZERO_ADDRESS, 1, callDoSomething123, {from: user}).should.be.rejectedWith(ERROR_MSG);
       await token.transferAndCall(receiver.address, 1, callDoSomething123, {from: user}).should.be.fulfilled;
       (await token.balanceOf(receiver.address)).should.be.bignumber.equal(1);
       (await token.balanceOf(user)).should.be.bignumber.equal(0);
@@ -468,7 +468,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
   describe('#transfer', async () => {
     it('if transfer called on contract, onTokenTransfer is also invoked', async () => {
       const receiver = await ERC677ReceiverTest.new();
-      (await receiver.from()).should.be.equal('0x0000000000000000000000000000000000000000');
+      (await receiver.from()).should.be.equal(ZERO_ADDRESS);
       (await receiver.value()).should.be.bignumber.equal('0');
       (await receiver.data()).should.be.equal('0x');
       (await receiver.someVar()).should.be.bignumber.equal('0');
@@ -505,13 +505,13 @@ async function testERC677BridgeToken(accounts, rewardable) {
     const amount = 90;
 
     beforeEach(async () => {
-      await token.mint(alice, 100, {from: owner }).should.be.fulfilled;
+      await token.mint(alice, amount + fee, {from: owner }).should.be.fulfilled;
     })
 
     it('Send tokens to recipient and pay gas in tokens to 3rd party', async () => {
       const timestamp = +new Date();
 
-      (await token.balanceOf(alice)).should.be.bignumber.equal(100);
+      (await token.balanceOf(alice)).should.be.bignumber.equal(amount + fee);
       (await token.balanceOf(bob)).should.be.bignumber.equal(0);
       (await token.balanceOf(charlie)).should.be.bignumber.equal(0);
 
@@ -553,7 +553,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
       const timestamp = +new Date();
 
       const receiver = await ERC677ReceiverTest.new();
-      (await receiver.from()).should.be.equal('0x0000000000000000000000000000000000000000');
+      (await receiver.from()).should.be.equal(ZERO_ADDRESS);
       (await receiver.value()).should.be.bignumber.equal('0');
       (await receiver.data()).should.be.equal('0x');
       (await receiver.someVar()).should.be.bignumber.equal('0');
@@ -578,10 +578,11 @@ async function testERC677BridgeToken(accounts, rewardable) {
       (await token.balanceOf(receiver.address)).should.be.bignumber.equal(amount);
       (await token.balanceOf(alice)).should.be.bignumber.equal(0);
       (await receiver.from()).should.be.equal(alice);
-      (await receiver.value()).should.be.bignumber.equal(90);
+      (await receiver.value()).should.be.bignumber.equal(amount);
       (await receiver.data()).should.be.equal('0x');
       (await token.balanceOf(charlie)).should.be.bignumber.equal(fee);
     })
+
     it('If transferPreSigned called on contract, still works even if onTokenTransfer does not exist', async () => {
       const timestamp = +new Date();
 
@@ -623,6 +624,138 @@ async function testERC677BridgeToken(accounts, rewardable) {
 
       (await token.balanceOf(someContract.address)).should.be.bignumber.equal(amount/2);
       (await token.balanceOf(alice)).should.be.bignumber.equal(0);
+    })
+  })
+
+  describe('#transferAndCallPreSigned', async () => {
+    const alice = accounts[10];  // has no ETH
+    const alicePrivateKey = toBufferStripPrefix('0x2bdd21761a483f71054e14f5b827213567971c676928d9a1808cbfa4b7501210');
+    const bob = accounts[9];     // has 1M ETH
+    const charlie = accounts[8]; // has 1M ETH
+
+    const fee = 10;
+    const amount = 90;
+
+    let homeErcToErcContract, foreignNativeToErcBridge, validatorContract;
+
+    beforeEach(async () => {
+      await token.mint(alice, amount + fee, {from: owner }).should.be.fulfilled;
+      validatorContract = await BridgeValidators.new()
+      const authorities = [accounts[2]];
+      await validatorContract.initialize(1, authorities, owner)
+      homeErcToErcContract = await HomeErcToErcBridge.new()
+      await homeErcToErcContract.initialize(validatorContract.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, token.address, executionDailyLimit, executionMaxPerTx, owner);
+      foreignNativeToErcBridge = await ForeignNativeToErcBridge.new()
+      await foreignNativeToErcBridge.initialize(validatorContract.address, token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, executionDailyLimit, executionMaxPerTx, owner);
+    })
+
+    it('calls contractFallback', async () => {
+      const timestamp = +new Date();
+
+      const receiver = await ERC677ReceiverTest.new();
+      (await receiver.from()).should.be.equal(ZERO_ADDRESS);
+      (await receiver.value()).should.be.bignumber.equal('0');
+      (await receiver.data()).should.be.equal('0x');
+      (await receiver.someVar()).should.be.bignumber.equal('0');
+
+      var ERC677ReceiverTestWeb3 = web3.eth.contract(ERC677ReceiverTest.abi);
+      var ERC677ReceiverTestWeb3Instance = ERC677ReceiverTestWeb3.at(receiver.address);
+      var callDoSomething123 = ERC677ReceiverTestWeb3Instance.doSomething.getData(123);
+
+      let msg = await token.getTransferAndCallPreSignedHash(token.address, token.address, amount, callDoSomething123, fee, timestamp);
+      let vrs = ethUtils.ecsign(toBufferStripPrefix(msg), alicePrivateKey);
+      let sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
+      await token.transferAndCallPreSigned(sig, token.address, amount, callDoSomething123, fee, timestamp, {from: charlie}).should.be.rejectedWith(ERROR_MSG);
+
+      msg = await token.getTransferAndCallPreSignedHash(token.address, ZERO_ADDRESS, amount, callDoSomething123, fee, timestamp);
+      vrs = ethUtils.ecsign(toBufferStripPrefix(msg), alicePrivateKey);
+      sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
+      await token.transferAndCallPreSigned(sig, ZERO_ADDRESS, amount, callDoSomething123, fee, timestamp, {from: charlie}).should.be.rejectedWith(ERROR_MSG);
+
+      msg = await token.getTransferAndCallPreSignedHash(token.address, receiver.address, amount, callDoSomething123, fee, timestamp);
+      vrs = ethUtils.ecsign(toBufferStripPrefix(msg), alicePrivateKey);
+      sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
+      const tx = await token.transferAndCallPreSigned(sig, receiver.address, amount, callDoSomething123, fee, timestamp, {from: charlie});
+
+      truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
+        return ev.from === alice && ev.to === receiver.address && ev.value.toNumber() === amount;
+      });
+
+      truffleAssert.eventEmitted(tx, 'Transfer', (ev) => {
+        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee;
+      });
+
+      truffleAssert.eventEmitted(tx, 'TransferAndCallPreSigned', (ev) => {
+        return ev.from === alice && ev.to === receiver.address && ev.delegate === charlie && ev.amount.toNumber() === amount && ev.data === callDoSomething123 && ev.fee.toNumber() === fee;
+      });
+
+      (await token.balanceOf(receiver.address)).should.be.bignumber.equal(amount);
+      (await token.balanceOf(alice)).should.be.bignumber.equal(0);
+      (await receiver.from()).should.be.equal(alice);
+      (await receiver.value()).should.be.bignumber.equal(amount);
+      (await receiver.data()).should.be.equal(callDoSomething123);
+      (await receiver.someVar()).should.be.bignumber.equal('123');
+    })
+
+    it('sends tokens to bridge contract', async () => {
+      const timestamp = +new Date();
+
+      await token.setBridgeContract(homeErcToErcContract.address).should.be.fulfilled;
+      const msg1 = await token.getTransferAndCallPreSignedHash(token.address, homeErcToErcContract.address, amount/2, '0x', fee/2, timestamp);
+      const vrs1 = ethUtils.ecsign(toBufferStripPrefix(msg1), alicePrivateKey);
+      const sig1 = ethUtils.toRpcSig(vrs1.v, vrs1.r, vrs1.s);
+      const tx1 = await token.transferAndCallPreSigned(sig1, homeErcToErcContract.address, amount/2, '0x', fee/2, timestamp, {from: charlie});
+      truffleAssert.eventEmitted(tx1, 'Transfer', (ev) => {
+        return ev.from === alice && ev.to === homeErcToErcContract.address && ev.value.toNumber() === amount/2;
+      });
+      truffleAssert.eventEmitted(tx1, 'Transfer', (ev) => {
+        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee/2;
+      });
+      truffleAssert.eventEmitted(tx1, 'TransferAndCallPreSigned', (ev) => {
+        return ev.from === alice && ev.to === homeErcToErcContract.address && ev.delegate === charlie && ev.amount.toNumber() === amount/2 && ev.data === '0x' && ev.fee.toNumber() === fee/2;
+      });
+
+
+      await token.setBridgeContract(foreignNativeToErcBridge.address).should.be.fulfilled;
+      const msg2 = await token.getTransferAndCallPreSignedHash(token.address, foreignNativeToErcBridge.address, amount/2, '0x', fee/2, timestamp);
+      const vrs2 = ethUtils.ecsign(toBufferStripPrefix(msg2), alicePrivateKey);
+      const sig2 = ethUtils.toRpcSig(vrs2.v, vrs2.r, vrs2.s);
+      const tx2 = await token.transferAndCallPreSigned(sig2, foreignNativeToErcBridge.address, amount/2, '0x', fee/2, timestamp, {from: charlie});
+      truffleAssert.eventEmitted(tx2, 'Transfer', (ev) => {
+        return ev.from === alice && ev.to === foreignNativeToErcBridge.address && ev.value.toNumber() === amount/2;
+      });
+      truffleAssert.eventEmitted(tx2, 'Transfer', (ev) => {
+        return ev.from === alice && ev.to === charlie && ev.value.toNumber() === fee/2;
+      });
+      truffleAssert.eventEmitted(tx2, 'TransferAndCallPreSigned', (ev) => {
+        return ev.from === alice && ev.to === foreignNativeToErcBridge.address && ev.delegate === charlie && ev.amount.toNumber() === amount/2 && ev.data === '0x' && ev.fee.toNumber() === fee/2;
+      });
+    })
+
+    it('fails to sends tokens to contract that does not contains onTokenTransfer method', async () => {
+      const timestamp = +new Date();
+
+      await token.setBridgeContract(homeErcToErcContract.address).should.be.fulfilled;
+      const msg2 = await token.getTransferAndCallPreSignedHash(token.address, validatorContract.address, amount, '0x', fee, timestamp);
+      const vrs = ethUtils.ecsign(toBufferStripPrefix(msg2), alicePrivateKey);
+      const sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
+      await token.transferAndCallPreSigned(sig, validatorContract.address, amount, '0x', fee, timestamp, {from: charlie}).should.be.rejectedWith(ERROR_MSG);
+    })
+
+    it('fails to send tokens to bridge contract out of limits', async () => {
+      const timestamp = +new Date();
+      const lessThanMin = 0.0001
+
+      let msg = await token.getTransferAndCallPreSignedHash(token.address, homeErcToErcContract.address, lessThanMin, '0x', fee, timestamp);
+      let vrs = ethUtils.ecsign(toBufferStripPrefix(msg), alicePrivateKey);
+      let sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
+      await token.transferAndCallPreSigned(sig, homeErcToErcContract.address, lessThanMin, '0x', fee, timestamp, {from: charlie}).should.be.rejectedWith(ERROR_MSG);
+
+      await token.setBridgeContract(foreignNativeToErcBridge.address).should.be.fulfilled;
+      msg = await token.getTransferAndCallPreSignedHash(token.address, ZERO_ADDRESS, lessThanMin, '0x', fee, timestamp);
+      vrs = ethUtils.ecsign(toBufferStripPrefix(msg), alicePrivateKey);
+      sig = ethUtils.toRpcSig(vrs.v, vrs.r, vrs.s);
+      await token.transferAndCallPreSigned(sig, ZERO_ADDRESS, lessThanMin, '0x', fee, timestamp, {from: charlie}).should.be.rejectedWith(ERROR_MSG);
     })
   })
 }
