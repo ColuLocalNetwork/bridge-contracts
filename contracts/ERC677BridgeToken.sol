@@ -1,8 +1,8 @@
 pragma solidity 0.4.24;
 
-import "openzeppelin-solidity/contracts/token/ERC20/BurnableToken.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Burnable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 import "./IBurnableMintableERC677Token.sol";
 import "./ERC865.sol";
 import "./ERC677Receiver.sol";
@@ -11,9 +11,9 @@ import "./libraries/Message.sol";
 
 contract ERC677BridgeToken is
     IBurnableMintableERC677Token,
-    DetailedERC20,
-    BurnableToken,
-    MintableToken,
+    ERC20Detailed,
+    ERC20Burnable,
+    ERC20Mintable,
     ERC865 {
 
     address public bridgeContract;
@@ -24,7 +24,7 @@ contract ERC677BridgeToken is
         string _name,
         string _symbol,
         uint8 _decimals)
-    public DetailedERC20(_name, _symbol, _decimals) {}
+    public ERC20Detailed(_name, _symbol, _decimals) {}
 
     function setBridgeContract(address _bridgeContract) onlyOwner public {
         require(_bridgeContract != address(0) && isContract(_bridgeContract));
@@ -102,7 +102,7 @@ contract ERC677BridgeToken is
             return;
         }
 
-        DetailedERC20 token = DetailedERC20(_token);
+        ERC20Detailed token = ERC20Detailed(_token);
         uint256 balance = token.balanceOf(address(this));
         require(token.transfer(_to, balance));
     }

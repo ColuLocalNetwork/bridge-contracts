@@ -5,7 +5,7 @@ import "../upgradeability/EternalStorage.sol";
 import "../libraries/SafeMath.sol";
 import "./Validatable.sol";
 import "./EternalOwnable.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 
 contract BasicBridge is EternalStorage, Validatable, EternalOwnable, OwnedUpgradeability {
@@ -134,7 +134,7 @@ contract BasicBridge is EternalStorage, Validatable, EternalOwnable, OwnedUpgrad
             return;
         }
 
-        ERC20Basic token = ERC20Basic(_token);
+        IERC20 token = IERC20(_token);
         uint256 balance = token.balanceOf(this);
         require(token.transfer(_to, balance));
     }
