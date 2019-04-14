@@ -3,6 +3,7 @@ pragma solidity 0.4.24;
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Burnable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./IBurnableMintableERC677Token.sol";
 import "./ERC865.sol";
 import "./ERC677Receiver.sol";
@@ -14,6 +15,7 @@ contract ERC677BridgeToken is
     ERC20Detailed,
     ERC20Burnable,
     ERC20Mintable,
+    Ownable,
     ERC865 {
 
     address public bridgeContract;
@@ -85,10 +87,6 @@ contract ERC677BridgeToken is
         uint length;
         assembly { length := extcodesize(_addr) }
         return length > 0;
-    }
-
-    function finishMinting() public returns (bool) {
-        revert();
     }
 
     function renounceOwnership() public onlyOwner {
