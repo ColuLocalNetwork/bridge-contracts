@@ -1,5 +1,5 @@
 pragma solidity 0.4.24;
-import "../../libraries/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../BasicBridge.sol";
 /* import "../../IBurnableMintableERC677Token.sol"; */
 import "../../ERC677Receiver.sol";

@@ -122,8 +122,15 @@ contract('HomeBridge_ERC20_to_ERC20', async (accounts) => {
     beforeEach(async () => {
       homeBridge = await HomeBridge.new();
       token = await ERC677BridgeToken.new("Some ERC20", "RSZT", 18);
+<<<<<<< HEAD
       await homeBridge.initialize(validatorContract.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, token.address, foreignDailyLimit, foreignMaxPerTx, owner);
       await token.transferOwnership(homeBridge.address);
+=======
+      await homeBridge.initialize(validatorContract.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, token.address);
+
+      await token.addMinter(homeBridge.address);
+      await token.renounceMinter();
+>>>>>>> Upgrading to openzeppelin v2 contracts
     })
     it('should allow validator to withdraw', async () => {
       const recipient = accounts[5];
@@ -163,7 +170,8 @@ contract('HomeBridge_ERC20_to_ERC20', async (accounts) => {
       await validatorContractWith2Signatures.initialize(2, authoritiesTwoAccs, ownerOfValidators)
       let homeBridgeWithTwoSigs = await HomeBridge.new();
       await homeBridgeWithTwoSigs.initialize(validatorContractWith2Signatures.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, token2sig.address, foreignDailyLimit, foreignMaxPerTx, owner);
-      await token2sig.transferOwnership(homeBridgeWithTwoSigs.address);
+      await token2sig.addMinter(homeBridgeWithTwoSigs.address);
+      await token2sig.renounceMinter();
       const recipient = accounts[5];
       const value = halfEther;
       const transactionHash = "0x806335163828a8eda675cff9c84fa6e6c7cf06bb44cc6ec832e42fe789d01415";
@@ -226,7 +234,8 @@ contract('HomeBridge_ERC20_to_ERC20', async (accounts) => {
       await validatorContractWith2Signatures.initialize(2, authoritiesTwoAccs, ownerOfValidators)
       let homeBridgeWithTwoSigs = await HomeBridge.new();
       await homeBridgeWithTwoSigs.initialize(validatorContractWith2Signatures.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, token2sig.address, foreignDailyLimit, foreignMaxPerTx, owner);
-      await token2sig.transferOwnership(homeBridgeWithTwoSigs.address);
+      await token2sig.addMinter(homeBridgeWithTwoSigs.address);
+      await token2sig.renounceMinter();
       const recipient = accounts[5];
       const value = halfEther.div(2);
       const transactionHash = "0x806335163828a8eda675cff9c84fa6e6c7cf06bb44cc6ec832e42fe789d01415";
@@ -253,7 +262,8 @@ contract('HomeBridge_ERC20_to_ERC20', async (accounts) => {
 
       const homeBridgeWithThreeSigs = await HomeBridge.new();
       await homeBridgeWithThreeSigs.initialize(validatorContractWith3Signatures.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, token.address, foreignDailyLimit, foreignMaxPerTx, owner);
-      await token.transferOwnership(homeBridgeWithThreeSigs.address);
+      await token.addMinter(homeBridgeWithThreeSigs.address);
+      await token.renounceMinter();
 
       const value = web3.toBigNumber(web3.toWei(0.5, "ether"));
       const transactionHash = "0x806335163828a8eda675cff9c84fa6e6c7cf06bb44cc6ec832e42fe789d01415";

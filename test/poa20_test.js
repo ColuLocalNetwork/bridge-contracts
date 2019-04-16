@@ -42,9 +42,6 @@ async function testERC677BridgeToken(accounts, rewardable) {
     const totalSupply = await token.totalSupply();
     assert.equal(totalSupply, 0);
 
-    const mintingFinished = await token.mintingFinished();
-    assert.equal(mintingFinished, false);
-
     const [major, minor, patch] = await token.getTokenInterfacesVersion()
     major.should.be.bignumber.gte(0)
     minor.should.be.bignumber.gte(0)
@@ -244,10 +241,6 @@ async function testERC677BridgeToken(accounts, rewardable) {
       await token.mint(user, 1, {from: owner }).should.be.fulfilled;
       (await token.totalSupply()).should.be.bignumber.equal(1);
       (await token.balanceOf(user)).should.be.bignumber.equal(1);
-    })
-
-    it('no one can call finishMinting', async () => {
-      await token.finishMinting().should.be.rejectedWith(ERROR_MSG)
     })
 
     it('cannot mint by non-owner', async () => {

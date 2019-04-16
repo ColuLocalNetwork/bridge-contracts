@@ -79,7 +79,9 @@ contract('ForeignBridge', async (accounts) => {
       const halfEther = web3.toBigNumber(web3.toWei(0.5, "ether"));
       await foreignBridge.initialize(validatorContract.address, token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, homeDailyLimit, homeMaxPerTx, owner);
       oneEther.should.be.bignumber.equal(await foreignBridge.dailyLimit());
-      await token.transferOwnership(foreignBridge.address);
+
+      await token.addMinter(foreignBridge.address);
+      await token.renounceMinter();
     })
     it('should allow to deposit', async () => {
       var recipientAccount = accounts[3];
@@ -218,7 +220,8 @@ contract('ForeignBridge', async (accounts) => {
       foreignBridgeWithMultiSignatures = await ForeignBridge.new()
       const oneEther = web3.toBigNumber(web3.toWei(1, "ether"));
       await foreignBridgeWithMultiSignatures.initialize(multisigValidatorContract.address, token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, homeDailyLimit, homeMaxPerTx, owner, {from: ownerOfValidatorContract});
-      await token.transferOwnership(foreignBridgeWithMultiSignatures.address);
+      await token.addMinter(foreignBridgeWithMultiSignatures.address);
+      await token.renounceMinter();
     })
     it('deposit should fail if not enough signatures are provided', async () => {
 
@@ -272,7 +275,8 @@ contract('ForeignBridge', async (accounts) => {
       const foreignBridgeWithThreeSigs = await ForeignBridge.new()
 
       await foreignBridgeWithThreeSigs.initialize(validatorContractWith3Signatures.address, erc20Token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, homeDailyLimit, homeMaxPerTx, owner);
-      await erc20Token.transferOwnership(foreignBridgeWithThreeSigs.address);
+      await erc20Token.addMinter(foreignBridgeWithThreeSigs.address);
+      await erc20Token.renounceMinter();
 
       const txHash = "0x35d3818e50234655f6aebb2a1cfbf30f59568d8a4ec72066fac5a25dbe7b8121";
       const message = createMessage(recipient, value, txHash, foreignBridgeWithThreeSigs.address);

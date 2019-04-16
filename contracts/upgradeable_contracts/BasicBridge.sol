@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 import "../IBridgeValidators.sol";
 import "./OwnedUpgradeability.sol";
 import "../upgradeability/EternalStorage.sol";
-import "../libraries/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Validatable.sol";
 import "./EternalOwnable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";

@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 import "../IBlockReward.sol";
-import "../libraries/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 contract BlockReward is IBlockReward {
