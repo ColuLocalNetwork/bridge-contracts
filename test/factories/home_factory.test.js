@@ -1,6 +1,7 @@
 const HomeBridgeFactory = artifacts.require("HomeBridgeFactory.sol")
 const HomeBridge = artifacts.require("HomeBridgeErcToErc.sol")
 const BridgeValidators = artifacts.require("BridgeValidators.sol")
+const ERC677BridgeToken = artifacts.require("ERC677BridgeToken.sol")
 
 const {ERROR_MSG, ZERO_ADDRESS, INVALID_ARGUMENTS} = require('../setup')
 const {getEventFromLogs} = require('../helpers/helpers')
@@ -145,6 +146,30 @@ contract('HomeBridgeFactory', async (accounts) => {
       major.should.be.bignumber.gte(0)
       minor.should.be.bignumber.gte(0)
       patch.should.be.bignumber.gte(0)
+    })
+
+    it('should create token with correct agruments on deploy home bridge', async () => {
+      let token = { name: "Some ERC20", symbol: "SMT_1", decimals: 18}
+
+      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals, tokenOwner)
+      const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
+      const bridgeToken = await ERC677BridgeToken.at(args._token)
+
+      token.name.should.be.equal(await bridgeToken.name())
+      token.symbol.should.be.equal(await bridgeToken.symbol())
+      token.decimals.should.be.equal((await bridgeToken.decimals()).toNumber())
+      tokenOwner.should.be.equal(await bridgeToken.owner())
+      args._homeBridge.should.be.equal(await bridgeToken.bridgeContract())
+    })
+
+    it('the bridge owner cannot mint tokens', async () => {
+      const user = accounts[2]
+      let token = { name: "Some ERC20", symbol: "SMT_1", decimals: 18}
+
+      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals, tokenOwner)
+      const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
+      const bridgeToken = await ERC677BridgeToken.at(args._token)
+      await bridgeToken.mint(user, oneEther, {from: tokenOwner}).should.not.be.fulfilled
     })
   })
 })
