@@ -122,15 +122,9 @@ contract('HomeBridge_ERC20_to_ERC20', async (accounts) => {
     beforeEach(async () => {
       homeBridge = await HomeBridge.new();
       token = await ERC677BridgeToken.new("Some ERC20", "RSZT", 18);
-<<<<<<< HEAD
       await homeBridge.initialize(validatorContract.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, token.address, foreignDailyLimit, foreignMaxPerTx, owner);
-      await token.transferOwnership(homeBridge.address);
-=======
-      await homeBridge.initialize(validatorContract.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, token.address);
-
       await token.addMinter(homeBridge.address);
       await token.renounceMinter();
->>>>>>> Upgrading to openzeppelin v2 contracts
     })
     it('should allow validator to withdraw', async () => {
       const recipient = accounts[5];

@@ -151,6 +151,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
     describe('#mintReward', async() => {
       it('can only be called by BlockReward contract', async () => {
         await token.setBlockRewardContractMock(accounts[2]).should.be.fulfilled;
+        await token.addMinter(accounts[2]).should.be.fulfilled;
         await token.mintReward([], [], {from: user }).should.be.rejectedWith(ERROR_MSG);
         await token.mintReward([], [], {from: accounts[2] }).should.be.fulfilled;
       })
@@ -165,6 +166,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
         (await token.balanceOf(user3)).should.be.bignumber.equal(0);
 
         await token.setBlockRewardContractMock(accounts[4]).should.be.fulfilled;
+        await token.addMinter(accounts[4]).should.be.fulfilled;
         await token.mintReward([user1, user2, user3], [100, 200, 300], {from: accounts[4] }).should.be.fulfilled;
 
         assert.equal(await token.totalSupply(), 600);
@@ -177,6 +179,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
     describe('#stake', async() => {
       it('can only be called by ValidatorSet contract', async () => {
         await token.setBlockRewardContractMock(accounts[2]).should.be.fulfilled;
+        await token.addMinter(accounts[2]).should.be.fulfilled;
         await token.mintReward([user], [100], {from: accounts[2] }).should.be.fulfilled;
         await token.setValidatorSetContractMock(accounts[3]).should.be.fulfilled;
         await token.stake(user, 100, {from: accounts[4] }).should.be.rejectedWith(ERROR_MSG);
@@ -184,6 +187,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
       })
       it('should revert if user doesn\'t have enough balance', async () => {
         await token.setBlockRewardContractMock(accounts[2]).should.be.fulfilled;
+        await token.addMinter(accounts[2]).should.be.fulfilled;
         await token.mintReward([user], [99], {from: accounts[2] }).should.be.fulfilled;
         (await token.balanceOf(user)).should.be.bignumber.equal(99);
         await token.setValidatorSetContractMock(accounts[3]).should.be.fulfilled;
@@ -191,6 +195,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
       })
       it('should decrease user\'s balance and increase ValidatorSet\'s balance', async () => {
         await token.setBlockRewardContractMock(accounts[2]).should.be.fulfilled;
+        await token.addMinter(accounts[2]).should.be.fulfilled;
         await token.mintReward([user], [100], {from: accounts[2] }).should.be.fulfilled;
         (await token.balanceOf(user)).should.be.bignumber.equal(100);
         (await token.balanceOf(accounts[3])).should.be.bignumber.equal(0);
@@ -204,6 +209,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
     describe('#withdraw', async() => {
       it('can only be called by ValidatorSet contract', async () => {
         await token.setBlockRewardContractMock(accounts[2]).should.be.fulfilled;
+        await token.addMinter(accounts[2]).should.be.fulfilled;
         await token.mintReward([user], [100], {from: accounts[2] }).should.be.fulfilled;
         await token.setValidatorSetContractMock(accounts[3]).should.be.fulfilled;
         await token.stake(user, 100, {from: accounts[3] }).should.be.fulfilled;
@@ -212,6 +218,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
       })
       it('should revert if ValidatorSet doesn\'t have enough balance', async () => {
         await token.setBlockRewardContractMock(accounts[2]).should.be.fulfilled;
+        await token.addMinter(accounts[2]).should.be.fulfilled;
         await token.mintReward([user], [100], {from: accounts[2] }).should.be.fulfilled;
         (await token.balanceOf(user)).should.be.bignumber.equal(100);
         await token.setValidatorSetContractMock(accounts[3]).should.be.fulfilled;
@@ -221,6 +228,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
       })
       it('should decrease ValidatorSet\'s balance and increase user\'s balance', async () => {
         await token.setBlockRewardContractMock(accounts[2]).should.be.fulfilled;
+        await token.addMinter(accounts[2]).should.be.fulfilled;
         await token.mintReward([user], [100], {from: accounts[2] }).should.be.fulfilled;
         (await token.balanceOf(user)).should.be.bignumber.equal(100);
         (await token.balanceOf(accounts[3])).should.be.bignumber.equal(0);

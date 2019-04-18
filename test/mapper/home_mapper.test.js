@@ -25,6 +25,7 @@ contract('BridgeMapper', async (accounts) => {
   let validatorContract, owner, foreignBridgeContract, homeBridgeContract, homeBridgeFactory, foreignBridgeFactory
   before(async () => {
     owner = accounts[0]
+    tokenOwner = accounts[1]
 
     validatorContract = await BridgeValidators.new()
     foreignBridgeContract = await ForeignBridge.new()
@@ -64,7 +65,7 @@ contract('BridgeMapper', async (accounts) => {
       let foreignBridgeDeployedArgs = getEventFromLogs((await foreignBridgeFactory.deployForeignBridge(foreignToken.address)).logs, 'ForeignBridgeDeployed').args
 
       let homeToken = { name: "Home ERC20", symbol: "HSMT", decimals: 18 }
-      let homeBridgeDeployedArgs = getEventFromLogs((await homeBridgeFactory.deployHomeBridge(homeToken.name, homeToken.symbol, homeToken.decimals)).logs, 'HomeBridgeDeployed').args
+      let homeBridgeDeployedArgs = getEventFromLogs((await homeBridgeFactory.deployHomeBridge(homeToken.name, homeToken.symbol, homeToken.decimals, tokenOwner)).logs, 'HomeBridgeDeployed').args
 
       await bridgeMapper.addBridgeMapping().should.be.rejectedWith(INVALID_ARGUMENTS)
       await bridgeMapper.addBridgeMapping(ZERO_ADDRESS, homeBridgeDeployedArgs._token, foreignBridgeDeployedArgs._foreignBridge, homeBridgeDeployedArgs._homeBridge, foreignBridgeDeployedArgs._blockNumber, homeBridgeDeployedArgs._blockNumber).should.be.rejectedWith(ERROR_MSG)
@@ -80,7 +81,7 @@ contract('BridgeMapper', async (accounts) => {
       let foreignBridgeDeployedArgs = getEventFromLogs((await foreignBridgeFactory.deployForeignBridge(foreignToken.address)).logs, 'ForeignBridgeDeployed').args
 
       let homeToken = { name: "Home ERC20", symbol: "HSMT_1", decimals: 18 }
-      let homeBridgeDeployedArgs = getEventFromLogs((await homeBridgeFactory.deployHomeBridge(homeToken.name, homeToken.symbol, homeToken.decimals)).logs, 'HomeBridgeDeployed').args
+      let homeBridgeDeployedArgs = getEventFromLogs((await homeBridgeFactory.deployHomeBridge(homeToken.name, homeToken.symbol, homeToken.decimals, tokenOwner)).logs, 'HomeBridgeDeployed').args
 
       let {logs} = await bridgeMapper.addBridgeMapping(foreignToken.address, homeBridgeDeployedArgs._token, foreignBridgeDeployedArgs._foreignBridge, homeBridgeDeployedArgs._homeBridge, foreignBridgeDeployedArgs._blockNumber, homeBridgeDeployedArgs._blockNumber)
       let {args} = getEventFromLogs(logs, 'BridgeMappingUpdated')
@@ -104,7 +105,7 @@ contract('BridgeMapper', async (accounts) => {
       let foreignBridgeDeployedArgs = getEventFromLogs((await foreignBridgeFactory.deployForeignBridge(foreignToken.address)).logs, 'ForeignBridgeDeployed').args
 
       let homeToken = { name: "Another Home ERC20", symbol: "HSMT_2", decimals: 18 }
-      let homeBridgeDeployedArgs = getEventFromLogs((await homeBridgeFactory.deployHomeBridge(homeToken.name, homeToken.symbol, homeToken.decimals)).logs, 'HomeBridgeDeployed').args
+      let homeBridgeDeployedArgs = getEventFromLogs((await homeBridgeFactory.deployHomeBridge(homeToken.name, homeToken.symbol, homeToken.decimals, tokenOwner)).logs, 'HomeBridgeDeployed').args
 
       let {logs} = await bridgeMapper.addBridgeMapping(foreignToken.address, homeBridgeDeployedArgs._token, foreignBridgeDeployedArgs._foreignBridge, homeBridgeDeployedArgs._homeBridge, foreignBridgeDeployedArgs._blockNumber, homeBridgeDeployedArgs._blockNumber)
       let {args} = getEventFromLogs(logs, 'BridgeMappingUpdated')
@@ -136,7 +137,7 @@ contract('BridgeMapper', async (accounts) => {
       let foreignBridgeDeployedArgs = getEventFromLogs((await foreignBridgeFactory.deployForeignBridge(foreignToken.address)).logs, 'ForeignBridgeDeployed').args
 
       let homeToken = { name: "Home ERC20", symbol: "HSMT", decimals: 18 }
-      let homeBridgeDeployedArgs = getEventFromLogs((await homeBridgeFactory.deployHomeBridge(homeToken.name, homeToken.symbol, homeToken.decimals)).logs, 'HomeBridgeDeployed').args
+      let homeBridgeDeployedArgs = getEventFromLogs((await homeBridgeFactory.deployHomeBridge(homeToken.name, homeToken.symbol, homeToken.decimals, tokenOwner)).logs, 'HomeBridgeDeployed').args
 
       await bridgeMapper.addBridgeMapping(foreignToken.address, homeBridgeDeployedArgs._token, foreignBridgeDeployedArgs._foreignBridge, homeBridgeDeployedArgs._homeBridge, foreignBridgeDeployedArgs._blockNumber, homeBridgeDeployedArgs._blockNumber)
 

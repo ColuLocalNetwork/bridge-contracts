@@ -21,7 +21,8 @@ contract('HomeBridgeFactory', async (accounts) => {
   before(async () => {
     validatorContract = await BridgeValidators.new()
     homeBridgeContract = await HomeBridge.new()
-    owner = accounts[0]
+    owner = accounts[0],
+    tokenOwner = accounts[1]
   })
 
   describe('#initialize', async () => {
@@ -95,7 +96,7 @@ contract('HomeBridgeFactory', async (accounts) => {
     it('should deploy a home bridge', async () => {
       let token = { name: "Some ERC20", symbol: "SMT_1", decimals: 18 }
 
-      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals)
+      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals, tokenOwner)
       const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
 
       ZERO_ADDRESS.should.not.be.equal(args._homeBridge)
@@ -122,7 +123,7 @@ contract('HomeBridgeFactory', async (accounts) => {
     it('should deploy a second home bridge using same factory', async () => {
       let token = { name: "Another ERC20", symbol: "SMT_2", decimals: 18 }
 
-      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals)
+      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals, tokenOwner)
       const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
 
       ZERO_ADDRESS.should.not.be.equal(args._homeBridge)

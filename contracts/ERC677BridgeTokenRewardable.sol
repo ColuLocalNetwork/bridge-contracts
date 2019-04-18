@@ -38,29 +38,16 @@ contract ERC677BridgeTokenRewardable is ERC677BridgeToken {
         for (uint256 i = 0; i < _receivers.length; i++) {
             address to = _receivers[i];
             uint256 amount = _rewards[i];
-
-            // Mint `amount` for `to`
-            totalSupply_ = totalSupply_.add(amount);
-            balances[to] = balances[to].add(amount);
-            emit Mint(to, amount);
-            emit Transfer(address(0), to, amount);
+            mint(to, amount);
         }
     }
 
     function stake(address _staker, uint256 _amount) external onlyValidatorSetContract {
-        // Transfer `_amount` from `_staker` to `validatorSetContract`
-        require(_amount <= balances[_staker]);
-        balances[_staker] = balances[_staker].sub(_amount);
-        balances[validatorSetContract] = balances[validatorSetContract].add(_amount);
-        emit Transfer(_staker, validatorSetContract, _amount);
+        _transfer(_staker, validatorSetContract, _amount);
     }
 
     function withdraw(address _staker, uint256 _amount) external onlyValidatorSetContract {
-        // Transfer `_amount` from `validatorSetContract` to `_staker`
-        require(_amount <= balances[validatorSetContract]);
-        balances[validatorSetContract] = balances[validatorSetContract].sub(_amount);
-        balances[_staker] = balances[_staker].add(_amount);
-        emit Transfer(validatorSetContract, _staker, _amount);
+      _transfer(validatorSetContract, _staker, _amount);
     }
 
     function transfer(address _to, uint256 _value) public returns(bool) {

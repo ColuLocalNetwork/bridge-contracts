@@ -38,6 +38,11 @@ contract ERC677BridgeToken is
         _;
     }
 
+    modifier onlyBridgeContract() {
+        require(msg.sender == bridgeContract);
+        _;
+    }
+
     function transferAndCall(address _to, uint _value, bytes _data)
         external validRecipient(_to) returns (bool)
     {
@@ -93,7 +98,7 @@ contract ERC677BridgeToken is
         revert();
     }
 
-    function claimTokens(address _token, address _to) public onlyOwner {
+    function claimTokens(address _token, address _to) public onlyBridgeContract {
         require(_to != address(0));
         if (_token == address(0)) {
             _to.transfer(address(this).balance);
@@ -107,11 +112,8 @@ contract ERC677BridgeToken is
 
     function transferWithFee(address _sender, address _from, address _to, uint256 _value, uint256 _fee) internal returns(bool)
     {
-        balances[_from] = balances[_from].sub(_value).sub(_fee);
-        balances[_to] = balances[_to].add(_value);
-        balances[_sender] = balances[_sender].add(_fee);
-        emit Transfer(_from, _to, _value);
-        emit Transfer(_from, _sender, _fee);
+        _transfer(_from, _to, _value);
+        _transfer(_from, _sender, _fee);
         return true;
     }
 

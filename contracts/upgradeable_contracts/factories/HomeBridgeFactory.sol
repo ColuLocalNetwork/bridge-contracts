@@ -25,7 +25,7 @@ contract HomeBridgeFactory is BasicBridgeFactory {
             uint256 _foreignMaxPerTx,
             address _homeBridgeOwner,
             address _homeProxyOwner) public {
-        
+
 
         require(!isInitialized());
         require(_owner != address(0));
@@ -61,7 +61,7 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         setOwner(_owner); // set to the real owner.
     }
 
-    function deployHomeBridge(string _tokenName, string _tokenSymbol, uint8 _tokenDecimals) public onlyOwner {
+    function deployHomeBridge(string _tokenName, string _tokenSymbol, uint8 _tokenDecimals, address _tokenOwner) public onlyOwner {
         // deploy new EternalStorageProxy
         EternalStorageProxy proxy = new EternalStorageProxy();
         // connect it to the static BridgeValidators implementation
@@ -80,8 +80,12 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         ERC677BridgeToken token = new ERC677BridgeToken(_tokenName, _tokenSymbol, _tokenDecimals);
         // set token bridge contract
         token.setBridgeContract(proxy);
-        // transfer token ownership to the bridge
-        token.transferOwnership(proxy);
+        // add token bridge contract as minter
+        token.addMinter(proxy);
+        // renounce minting from the bridge factory contract
+        token.renounceMinter();
+        // transfer token ownership to the token owner
+        token.transferOwnership(_tokenOwner);
         // cast proxy as IHomeBridge
         IHomeBridge homeBridge = IHomeBridge(proxy);
         // initialize homeBridge
