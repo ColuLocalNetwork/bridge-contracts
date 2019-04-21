@@ -51,7 +51,7 @@ contract ERC677BridgeToken is
     }
 
     function getTokenInterfacesVersion() public pure returns(uint64 major, uint64 minor, uint64 patch) {
-        return (2, 0, 0);
+        return (3, 0, 0);
     }
 
     function superTransfer(address _to, uint256 _value) internal returns(bool)
@@ -59,6 +59,11 @@ contract ERC677BridgeToken is
         return super.transfer(_to, _value);
     }
 
+    /**
+   * @dev ERC20 transfer with a contract fallback
+   * @param to The address to transfer to.
+   * @param value The amount to be transferred.
+   */
     function transfer(address _to, uint256 _value) public returns (bool)
     {
         require(superTransfer(_to, _value));
@@ -93,6 +98,11 @@ contract ERC677BridgeToken is
         revert();
     }
 
+    /**
+   * @dev Claims token or ether sent by mistake to the token contract
+   * @param _token The address to the token sent a null for ether.
+   * @param _to The address to to sent the tokens.
+   */
     function claimTokens(address _token, address _to) public onlyOwner {
         require(_to != address(0));
         if (_token == address(0)) {

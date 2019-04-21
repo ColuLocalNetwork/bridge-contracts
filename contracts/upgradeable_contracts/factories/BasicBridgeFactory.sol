@@ -6,7 +6,7 @@ import "../EternalOwnable.sol";
 contract BasicBridgeFactory is EternalStorage, EternalOwnable {
 
     function getBridgeFactoryVersion() public pure returns(uint64 major, uint64 minor, uint64 patch) {
-        return (2, 2, 0);
+        return (2, 3, 0);
     }
 
     function bridgeValidatorsImplementation() public view returns(address) {
@@ -91,11 +91,11 @@ contract BasicBridgeFactory is EternalStorage, EternalOwnable {
         uintStorage[keccak256(abi.encodePacked("foreignMaxPerTx"))] = _foreignMaxPerTx;
     }
 
-    function setInitialize(bool _status) internal { 
-        boolStorage[keccak256(abi.encodePacked("isInitialized"))] = _status; 
+    function setInitialize(bool _status) internal {
+        boolStorage[keccak256(abi.encodePacked("isInitialized"))] = _status;
     }
 
-    function isInitialized() public view returns(bool) { 
-        return boolStorage[keccak256(abi.encodePacked("isInitialized"))]; 
+    function isInitialized() public view returns(bool) {
+        return boolStorage[keccak256(abi.encodePacked("isInitialized"))];
     }
 }
