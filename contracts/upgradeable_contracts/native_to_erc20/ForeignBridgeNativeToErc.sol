@@ -1,10 +1,8 @@
 pragma solidity 0.4.24;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../BasicBridge.sol";
-/* import "../../IBurnableMintableERC677Token.sol"; */
 import "../../ERC677Receiver.sol";
 import "../BasicForeignBridge.sol";
-/* import "openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol"; */
 import "../ERC677Bridge.sol";
 
 

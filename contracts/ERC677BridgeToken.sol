@@ -60,9 +60,10 @@ contract ERC677BridgeToken is
     }
 
     /**
-   * @dev ERC20 transfer with a contract fallback
-   * @param to The address to transfer to.
-   * @param value The amount to be transferred.
+   * @dev ERC20 transfer with a contract fallback.
+   * Contract fallback to bridge is a special, That's the transfer to other network
+   * @param _to The address to transfer to.
+   * @param _value The amount to be transferred.
    */
     function transfer(address _to, uint256 _value) public returns (bool)
     {

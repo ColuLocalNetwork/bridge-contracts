@@ -3,7 +3,6 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../../libraries/Message.sol";
 import "../BasicBridge.sol";
 import "../../upgradeability/EternalStorage.sol";
-/* import "../../IBurnableMintableERC677Token.sol"; */
 import "../../ERC677Receiver.sol";
 import "../BasicHomeBridge.sol";
 import "../ERC677Bridge.sol";
