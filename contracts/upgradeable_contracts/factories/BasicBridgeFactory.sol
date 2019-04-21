@@ -6,7 +6,7 @@ import "../EternalOwnable.sol";
 contract BasicBridgeFactory is EternalStorage, EternalOwnable {
 
     function getBridgeFactoryVersion() public pure returns(uint64 major, uint64 minor, uint64 patch) {
-        return (3, 2, 0);
+        return (3, 0, 0);
     }
 
     function bridgeValidatorsImplementation() public view returns(address) {
