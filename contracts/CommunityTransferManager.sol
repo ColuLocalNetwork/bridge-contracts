@@ -8,13 +8,15 @@ import "./EntitiesList.sol";
 contract CommunityTransferManager {
   EntitiesList public entitiesList;
 
+  event EntityAdded(address indexed account, string entityUri, bytes32 permissions);
+
   constructor () public {
     entitiesList = new EntitiesList();
     entitiesList.addEntity(msg.sender, '', bytes32(3));
   }
 
   modifier onlyAdmin () {
-    require(entitiesList.hasPermissions(msg.sender, bytes32(3)));
+    require(entitiesList.hasPermission(msg.sender, bytes32(3)));
     _;
   }
 

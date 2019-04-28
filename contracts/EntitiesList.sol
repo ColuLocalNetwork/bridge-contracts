@@ -14,7 +14,6 @@ contract EntitiesList is Ownable {
     return (_entities[_account].uri, _entities[_account].permissions);
   }
 
-
   function permissionsOf(address _account) public view returns (bytes32) {
     return _entities[_account].permissions;
   }
@@ -35,7 +34,7 @@ contract EntitiesList is Ownable {
     _entities[_account].uri = _entityUri;
   }
 
-  function hasPermissions(address _account, bytes32 _permissions) public view returns (bool) {
-    return _entities[_account].permissions == _permissions;
+  function hasPermission(address _account, bytes32 _permissions) public view returns (bool) {
+    return (_entities[_account].permissions & _permissions) != bytes32(0);
   }
 }
