@@ -3,3 +3,7 @@ build
 flats
 .node*
 deploy/bridgeDeploymentOutput.txt
+
+.DS_Store
+
+.vscode
