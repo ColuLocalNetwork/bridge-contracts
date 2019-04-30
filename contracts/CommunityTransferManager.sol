@@ -12,8 +12,9 @@ contract CommunityTransferManager {
   bytes32 public constant userMask = bytes32(1);
   bytes32 public constant adminMask = bytes32(2);
   uint256 public constant maxRules = 20;
-
-  event EntityAdded(address indexed account, string entityUri, bytes32 permissions);
+  
+  event RuleAdded(bytes32 fromMask, bytes32 toMask, bool isMax, uint256 amount);
+  event RuleRemoved(uint256 index);
 
   constructor () public {
     entitiesList = new EntitiesList();
@@ -73,21 +74,27 @@ contract CommunityTransferManager {
     require(_rules.length < maxRules);
     Rule rule = new Rule(_fromMask, _toMask, false, 0);
     _rules.push(rule);
+
+    emit RuleAdded(_fromMask, _toMask, false, 0);
   }
 
   function addRule(bytes32 _fromMask, bytes32 _toMask, bool _isMax, uint256 _amount) public onlyAdmin {
     require(_rules.length < maxRules);
     Rule rule = new Rule(_fromMask, _toMask, _isMax, _amount);
     _rules.push(rule);
+
+    emit RuleAdded(_fromMask, _toMask, _isMax, _amount);
   }
 
-  function removeRule(uint256 index) public onlyAdmin {
-    require(index < _rules.length);
+  function removeRule(uint256 _index) public onlyAdmin {
+    require(_index < _rules.length);
 
-    for (uint i = index; i < _rules.length-1; i++) {
+    for (uint i = _index; i < _rules.length-1; i++) {
       _rules[i] = _rules[i+1];
     }
     _rules.length--;
+
+    emit RuleRemoved(_index);
   }
 
 }

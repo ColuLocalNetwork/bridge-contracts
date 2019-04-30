@@ -12,6 +12,9 @@ contract EntitiesList is Ownable {
   
   event EntityAdded(address indexed account, string entityUri, bytes32 permissions);
   event EntityRemoved(address indexed account);
+  event EntityPermissionsUpdated(address indexed account, bytes32 permissions);
+  event EntityUriUpdated(address indexed account, string uri);
+
 
   function entityOf(address _account) public view returns (string, bytes32) {
     return (_entities[_account].uri, _entities[_account].permissions);
@@ -39,11 +42,15 @@ contract EntitiesList is Ownable {
   function updateEntityUri(address _account, string _entityUri) onlyOwner public {
     require(_account != address(0));
     _entities[_account].uri = _entityUri;
+
+    emit EntityUriUpdated(_account, _entityUri);
   }
 
   function updateEntityPermissions(address _account, bytes32 _entityPermissions) onlyOwner public {
     require(_account != address(0));
     _entities[_account].permissions = _entityPermissions;
+
+    emit EntityPermissionsUpdated(_account, _entityPermissions);
   }
 
   function hasPermission(address _account, bytes32 _permissions) public view returns (bool) {
