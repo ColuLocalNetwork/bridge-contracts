@@ -3,3 +3,5 @@ build
 flats
 .node*
 deploy/bridgeDeploymentOutput.txt
+
+.vscode/

@@ -28,7 +28,7 @@ contract ERC677BridgeToken is
         uint8 _decimals)
     public ERC20Detailed(_name, _symbol, _decimals) {}
 
-    function setBridgeContract(address _bridgeContract) onlyOwner public {
+    function setBridgeContract(address _bridgeContract) onlyMinter public {
         require(_bridgeContract != address(0) && isContract(_bridgeContract));
         bridgeContract = _bridgeContract;
     }
