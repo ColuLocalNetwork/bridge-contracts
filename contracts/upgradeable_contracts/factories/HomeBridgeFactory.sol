@@ -61,7 +61,7 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         setOwner(_owner); // set to the real owner.
     }
 
-    function deployHomeBridge(string _tokenName, string _tokenSymbol, uint8 _tokenDecimals, address _tokenOwner) public onlyOwner {
+    function deployHomeBridge(string _tokenName, string _tokenSymbol, uint8 _tokenDecimals) public onlyOwner {
         // deploy new EternalStorageProxy
         EternalStorageProxy proxy = new EternalStorageProxy();
         // connect it to the static BridgeValidators implementation
@@ -85,7 +85,7 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         // renounce minting from the bridge factory contract
         token.renounceMinter();
         // transfer token ownership to the token owner
-        token.transferOwnership(_tokenOwner);
+        token.transferOwnership(msg.sender);
         // cast proxy as IHomeBridge
         IHomeBridge homeBridge = IHomeBridge(proxy);
         // initialize homeBridge

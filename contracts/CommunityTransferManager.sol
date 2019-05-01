@@ -1,12 +1,12 @@
 pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./ERC677BridgeToken.sol";
 import "./ITransferManager.sol";
 import "./EntitiesList.sol";
 import "./Rule.sol";
 
-contract CommunityTransferManager {
+contract CommunityTransferManager is 
+    ITransferManager {
   EntitiesList public entitiesList;
   Rule[] private _rules;
   bytes32 public constant userMask = bytes32(1);

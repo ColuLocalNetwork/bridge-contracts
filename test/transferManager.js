@@ -18,8 +18,7 @@ const APPROVED_USER_PERM = '0x00000000000000000000000000000000000000000000000000
 const BUSINESS_PERM = '0x000000000000000000000000000000000000000000000000000000000000000b' // user + approved + business
 
 contract('CommunityTransferManager', async (accounts) => {
-    let token
-    let transferManager
+    let token, transferManager, entitiesList
     const owner = accounts[0]
     const notOwner = accounts[1]
     const user = accounts[2]
@@ -42,7 +41,7 @@ contract('CommunityTransferManager', async (accounts) => {
 
     describe('#constructor', () => {
         it('creator is admin of the community', async () => {
-            entity = {uri: '', permissions: ADMIN_PERM}
+            const entity = {uri: '', permissions: ADMIN_PERM}
             transferManager = await CommunityTransferManager.new()
             await validateEntity(owner, entity)
         })
@@ -59,14 +58,6 @@ contract('CommunityTransferManager', async (accounts) => {
             assert.equal(await token.transferManager(), ZERO_ADDRESS)
         })
     })
-
-    // describe('test', () => {
-    //     it('test', async () => {
-    //         console.log(transferManager.contract)
-    //         console.log(transferManager.contract.addRule)
-    //         console.log(transferManager.contract.addRule['bytes32,bytes32,bool,uint256'])
-    //     })
-    // })
 
     describe('#join', async () => {
 

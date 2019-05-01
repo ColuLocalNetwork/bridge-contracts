@@ -97,7 +97,7 @@ contract('HomeBridgeFactory', async (accounts) => {
     it('should deploy a home bridge', async () => {
       let token = { name: "Some ERC20", symbol: "SMT_1", decimals: 18 }
 
-      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals, tokenOwner)
+      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals)
       const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
 
       ZERO_ADDRESS.should.not.be.equal(args._homeBridge)
@@ -124,7 +124,7 @@ contract('HomeBridgeFactory', async (accounts) => {
     it('should deploy a second home bridge using same factory', async () => {
       let token = { name: "Another ERC20", symbol: "SMT_2", decimals: 18 }
 
-      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals, tokenOwner)
+      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals)
       const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
 
       ZERO_ADDRESS.should.not.be.equal(args._homeBridge)
@@ -151,14 +151,14 @@ contract('HomeBridgeFactory', async (accounts) => {
     it('should create token with correct agruments on deploy home bridge', async () => {
       let token = { name: "Some ERC20", symbol: "SMT_1", decimals: 18}
 
-      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals, tokenOwner)
+      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals)
       const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
       const bridgeToken = await ERC677BridgeToken.at(args._token)
 
       token.name.should.be.equal(await bridgeToken.name())
       token.symbol.should.be.equal(await bridgeToken.symbol())
       token.decimals.should.be.equal((await bridgeToken.decimals()).toNumber())
-      tokenOwner.should.be.equal(await bridgeToken.owner())
+      owner.should.be.equal(await bridgeToken.owner())
       args._homeBridge.should.be.equal(await bridgeToken.bridgeContract())
     })
 
@@ -166,7 +166,7 @@ contract('HomeBridgeFactory', async (accounts) => {
       const user = accounts[2]
       let token = { name: "Some ERC20", symbol: "SMT_1", decimals: 18}
 
-      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals, tokenOwner)
+      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals)
       const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
       const bridgeToken = await ERC677BridgeToken.at(args._token)
       await bridgeToken.mint(user, oneEther, {from: tokenOwner}).should.not.be.fulfilled

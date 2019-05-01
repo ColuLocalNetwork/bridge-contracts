@@ -1,6 +1,7 @@
 const POA20 = artifacts.require("ERC677BridgeToken.sol");
 const POA20RewardableMock = artifacts.require("./mockContracts/ERC677BridgeTokenRewardableMock");
 const ERC677ReceiverTest = artifacts.require("ERC677ReceiverTest.sol")
+const TransferManagerTest = artifacts.require("TransferManagerTest.sol")
 const BlockRewardTest = artifacts.require("BlockReward.sol")
 const ValidatorSetTest = artifacts.require("ValidatorSet.sol")
 const { ERROR_MSG, ZERO_ADDRESS } = require('./setup');
@@ -42,6 +43,11 @@ async function testERC677BridgeToken(accounts, rewardable) {
     const totalSupply = await token.totalSupply();
     assert.equal(totalSupply, 0);
 
+    assert.equal(await token.owner(), owner);
+
+    assert.isOk(await token.isMinter(owner));
+
+
     const [major, minor, patch] = await token.getTokenInterfacesVersion()
     major.should.be.bignumber.gte(0)
     minor.should.be.bignumber.gte(0)
@@ -80,6 +86,52 @@ async function testERC677BridgeToken(accounts, rewardable) {
       (await token.bridgeContract()).should.be.equal(ZERO_ADDRESS);
     })
   })
+
+  describe('#tranferManager', async() => {
+    let transferManagerContract
+    
+    beforeEach(async () => {
+      transferManagerContract = await TransferManagerTest.new();
+    })
+
+    it('can set transfer manager contract', async () => {
+      (await token.transferManager()).should.be.equal(ZERO_ADDRESS);
+
+      await token.setTransferManager(transferManagerContract.address).should.be.fulfilled;
+
+      (await token.transferManager()).should.be.equal(transferManagerContract.address);
+    })
+
+    it('only minter can set transfer manager contract', async () => {
+      (await token.transferManager()).should.be.equal(ZERO_ADDRESS);
+
+      await token.setTransferManager(transferManagerContract.address, {from: user }).should.be.rejectedWith(ERROR_MSG);
+      (await token.transferManager()).should.be.equal(ZERO_ADDRESS);
+
+      await token.setTransferManager(transferManagerContract.address, {from: owner }).should.be.fulfilled;
+      (await token.transferManager()).should.be.equal(transferManagerContract.address);
+    })
+
+    it('fail to set invalid transfer manager contract address', async () => {
+      const invalidContractAddress = '0xaaB52d66283F7A1D5978bcFcB55721ACB467384b';
+      (await token.transferManager()).should.be.equal(ZERO_ADDRESS);
+
+      await token.setTransferManager(invalidContractAddress).should.be.rejectedWith(ERROR_MSG);
+      (await token.transferManager()).should.be.equal(ZERO_ADDRESS);
+
+      await token.setTransferManager(ZERO_ADDRESS).should.be.rejectedWith(ERROR_MSG);
+      (await token.transferManager()).should.be.equal(ZERO_ADDRESS);
+    })
+
+    it('can set transfer manager contract', async () => {
+      (await token.transferManager()).should.be.equal(ZERO_ADDRESS);
+
+      await token.setTransferManager(transferManagerContract.address).should.be.fulfilled;
+
+      (await token.transferManager()).should.be.equal(transferManagerContract.address);
+    })
+  })
+
 
   if (rewardable) {
     describe('#blockRewardContract', async() => {
@@ -347,6 +399,26 @@ async function testERC677BridgeToken(accounts, rewardable) {
         await token.transfer(arbitraryAccountAddress, amount, {from: user}).should.be.fulfilled;
       });
     }
+
+    describe('#withTransferManager', () => {
+      beforeEach(async () => {
+        const transferManagerContract = await TransferManagerTest.new();
+        await token.setTransferManager(transferManagerContract.address, {from: owner }).should.be.fulfilled;
+        (await token.transferManager()).should.be.equal(transferManagerContract.address);
+      })
+
+      it('can transer less than 1000 ether', async () => {
+        const amount = web3.toWei(1, "ether");
+        await token.mint(user, amount, {from: owner }).should.be.fulfilled;
+        await token.transfer(user, amount, {from: user}).should.be.fulfilled;
+      })
+
+      it('cannot transer more than 1000 ether', async () => {
+        const amount = web3.toWei(1001, "ether");
+        await token.mint(user, amount, {from: owner }).should.be.fulfilled;
+        await token.transfer(user, amount, {from: user}).should.be.rejectedWith(ERROR_MSG);
+      })
+    })
   })
 
   if (rewardable) {
