@@ -97,7 +97,7 @@ contract('HomeBridgeFactory', async (accounts) => {
     it('should deploy a home bridge', async () => {
       let token = { name: "Some ERC20", symbol: "SMT_1", decimals: 18 }
 
-      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals, tokenOwner)
+      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals)
       const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
 
       ZERO_ADDRESS.should.not.be.equal(args._homeBridge)
@@ -124,7 +124,7 @@ contract('HomeBridgeFactory', async (accounts) => {
     it('should deploy a second home bridge using same factory', async () => {
       let token = { name: "Another ERC20", symbol: "SMT_2", decimals: 18 }
 
-      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals, tokenOwner)
+      const {logs} = await homeBridgeFactory.deployHomeBridge(token.name, token.symbol, token.decimals)
       const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
 
       ZERO_ADDRESS.should.not.be.equal(args._homeBridge)
