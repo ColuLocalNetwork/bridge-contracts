@@ -55,7 +55,6 @@ contract ERC677BridgeToken is
     function transferAndCall(address _to, uint _value, bytes _data)
         external validRecipient(_to) returns (bool)
     {
-        require(verifyTransfer(msg.sender, _to, _value));
         require(superTransfer(_to, _value));
         emit Transfer(msg.sender, _to, _value, _data);
 
@@ -71,6 +70,7 @@ contract ERC677BridgeToken is
 
     function superTransfer(address _to, uint256 _value) internal returns(bool)
     {
+        require(verifyTransfer(msg.sender, _to, _value));
         return super.transfer(_to, _value);
     }
 
@@ -82,7 +82,6 @@ contract ERC677BridgeToken is
    */
     function transfer(address _to, uint256 _value) public returns (bool)
     {
-        require(verifyTransfer(msg.sender, _to, _value));
         require(superTransfer(_to, _value));
         if (isContract(_to) && !contractFallback(_to, _value, new bytes(0))) {
             if (_to == bridgeContract) {
