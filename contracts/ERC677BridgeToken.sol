@@ -9,9 +9,11 @@ import "./ERC865.sol";
 import "./ERC677Receiver.sol";
 import "./libraries/Message.sol";
 import "./ITransferManager.sol";
+import "./IRestrictedToken.sol";
 
 contract ERC677BridgeToken is
     IBurnableMintableERC677Token,
+    IRestrictedToken,
     ERC20Detailed,
     ERC20Burnable,
     ERC20Mintable,
@@ -37,6 +39,8 @@ contract ERC677BridgeToken is
     function setTransferManager(address _transferManager) onlyOwner public {
         require(_transferManager != address(0) && isContract(_transferManager));
         transferManager = ITransferManager(_transferManager);
+
+        emit TransferManagerSet(_transferManager);
     }
 
     modifier validRecipient(address _recipient) {

@@ -97,7 +97,8 @@ async function testERC677BridgeToken(accounts, rewardable) {
     it('can set transfer manager contract', async () => {
       (await token.transferManager()).should.be.equal(ZERO_ADDRESS);
 
-      await token.setTransferManager(transferManagerContract.address).should.be.fulfilled;
+      const tx = await token.setTransferManager(transferManagerContract.address).should.be.fulfilled;
+      truffleAssert.eventEmitted(tx, 'TransferManagerSet');
 
       (await token.transferManager()).should.be.equal(transferManagerContract.address);
     })
