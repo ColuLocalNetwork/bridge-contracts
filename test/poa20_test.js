@@ -87,7 +87,7 @@ async function testERC677BridgeToken(accounts, rewardable) {
     })
   })
 
-  describe('#tranferManager', async() => {
+  describe('#transferManager', async() => {
     let transferManagerContract
     
     beforeEach(async () => {
