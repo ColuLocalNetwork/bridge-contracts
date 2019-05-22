@@ -5,46 +5,54 @@ import "../upgradeability/EternalStorage.sol";
 
 contract BridgeMapper is EternalStorage, EternalOwnable {
 
-  event BridgeMappingUpdated(address indexed foreignToken, address homeToken, address foreignBridge, address homeBridge, uint256 foreignStartBlock, uint256 homeStartBlock);
+  event BridgeMappingUpdated(bytes32 key, address foreignToken, address homeToken, address foreignBridge, address homeBridge, uint256 foreignStartBlock, uint256 homeStartBlock);
 
-  function homeBridgeByForeignToken(address _foreignToken) public view returns(address) {
-    return addressStorage[keccak256(abi.encodePacked("homeBridgeByForeignToken", _foreignToken))];
+  function homeBridgeByKey(bytes32 _key) public view returns(address) {
+    return addressStorage[keccak256(abi.encodePacked("homeBridgeByKey", _key))];
   }
 
-  function setHomeBridgeByForeignToken(address _foreignToken, address _homeBridge) internal {
-    addressStorage[keccak256(abi.encodePacked("homeBridgeByForeignToken", _foreignToken))] = _homeBridge;
+  function setHomeBridgeByKey(bytes32 _key, address _homeBridge) internal {
+    addressStorage[keccak256(abi.encodePacked("homeBridgeByKey", _key))] = _homeBridge;
   }
 
-  function foreignBridgeByForeignToken(address _foreignToken) public view returns(address) {
-    return addressStorage[keccak256(abi.encodePacked("foreignBridgeByForeignToken", _foreignToken))];
+  function foreignBridgeByKey(bytes32 _key) public view returns(address) {
+    return addressStorage[keccak256(abi.encodePacked("foreignBridgeByKey", _key))];
   }
 
-  function setForeignBridgeByForeignToken(address _foreignToken, address _foreignBridge) internal {
-    addressStorage[keccak256(abi.encodePacked("foreignBridgeByForeignToken", _foreignToken))] = _foreignBridge;
+  function setForeignBridgeByKey(bytes32 _key, address _foreignBridge) internal {
+    addressStorage[keccak256(abi.encodePacked("foreignBridgeByKey", _key))] = _foreignBridge;
   }
 
-  function homeTokenByForeignToken(address _foreignToken) public view returns(address) {
-    return addressStorage[keccak256(abi.encodePacked("homeTokenByForeignToken", _foreignToken))];
+  function homeTokenByKey(bytes32 _key) public view returns(address) {
+    return addressStorage[keccak256(abi.encodePacked("homeTokenByKey", _key))];
   }
 
-  function setHomeTokenByForeignToken(address _foreignToken, address _homeToken) internal {
-    addressStorage[keccak256(abi.encodePacked("homeTokenByForeignToken", _foreignToken))] = _homeToken;
+  function setHomeTokenByKey(bytes32 _key, address _homeToken) internal {
+    addressStorage[keccak256(abi.encodePacked("homeTokenByKey", _key))] = _homeToken;
   }
 
-  function homeStartBlockByForeignToken(address _foreignToken) public view returns(uint256) {
-    return uintStorage[keccak256(abi.encodePacked("homeStartBlockByForeignToken", _foreignToken))];
+  function foreignTokenByKey(bytes32 _key) public view returns(address) {
+    return addressStorage[keccak256(abi.encodePacked("foreignTokenByKey", _key))];
   }
 
-  function setHomeStartBlockByForeignToken(address _foreignToken, uint256 _homeStartBlock) internal {
-    uintStorage[keccak256(abi.encodePacked("homeStartBlockByForeignToken", _foreignToken))] = _homeStartBlock;
+  function setForeignTokenByKey(bytes32 _key, address _foreignToken) internal {
+    addressStorage[keccak256(abi.encodePacked("foreignTokenByKey", _key))] = _foreignToken;
   }
 
-  function foreignStartBlockByForeignToken(address _foreignToken) public view returns(uint256) {
-    return uintStorage[keccak256(abi.encodePacked("foreignStartBlockByForeignToken", _foreignToken))];
+  function homeStartBlockByKey(bytes32 _key) public view returns(uint256) {
+    return uintStorage[keccak256(abi.encodePacked("homeStartBlockByKey", _key))];
   }
 
-  function setForeignStartBlockByForeignToken(address _foreignToken, uint256 _foreignStartBlock) internal {
-    uintStorage[keccak256(abi.encodePacked("foreignStartBlockByForeignToken", _foreignToken))] = _foreignStartBlock;
+  function setHomeStartBlockByKey(bytes32 _key, uint256 _homeStartBlock) internal {
+    uintStorage[keccak256(abi.encodePacked("homeStartBlockByKey", _key))] = _homeStartBlock;
+  }
+
+  function foreignStartBlockByKey(bytes32 _key) public view returns(uint256) {
+    return uintStorage[keccak256(abi.encodePacked("foreignStartBlockByKey", _key))];
+  }
+
+  function setForeignStartBlockByKey(bytes32 _key, uint256 _foreignStartBlock) internal {
+    uintStorage[keccak256(abi.encodePacked("foreignStartBlockByKey", _key))] = _foreignStartBlock;
   }
 
   function setInitialize(bool _status) internal { 
@@ -55,33 +63,35 @@ contract BridgeMapper is EternalStorage, EternalOwnable {
     return boolStorage[keccak256(abi.encodePacked("isInitialized"))]; 
   }
 
-  function addBridgeMapping(address _foreignToken, address _homeToken, address _foreignBridge, address _homeBridge, uint256 _foreignStartBlock, uint256 _homeStartBlock) public onlyOwner {
+  function addBridgeMapping(bytes32 _key, address _foreignToken, address _homeToken, address _foreignBridge, address _homeBridge, uint256 _foreignStartBlock, uint256 _homeStartBlock) public onlyOwner {
+    require(_key != bytes32(0));
     require(_foreignToken != address(0));
     require(_homeToken != address(0));
     require(_foreignBridge != address(0));
     require(_homeBridge != address(0));
     require(_foreignStartBlock > 0);
     require(_homeStartBlock > 0);
-    setHomeTokenByForeignToken(_foreignToken, _homeToken);
-    setForeignBridgeByForeignToken(_foreignToken, _foreignBridge);
-    setHomeBridgeByForeignToken(_foreignToken, _homeBridge);
-    setForeignStartBlockByForeignToken(_foreignToken, _foreignStartBlock);
-    setHomeStartBlockByForeignToken(_foreignToken, _homeStartBlock);
-    emit BridgeMappingUpdated(_foreignToken, _homeToken, _foreignBridge, _homeBridge, _foreignStartBlock, _homeStartBlock);
+    setHomeTokenByKey(_key, _homeToken);
+    setForeignTokenByKey(_key, _foreignToken);
+    setForeignBridgeByKey(_key, _foreignBridge);
+    setHomeBridgeByKey(_key, _homeBridge);
+    setForeignStartBlockByKey(_key, _foreignStartBlock);
+    setHomeStartBlockByKey(_key, _homeStartBlock);
+    emit BridgeMappingUpdated(_key, _foreignToken, _homeToken, _foreignBridge, _homeBridge, _foreignStartBlock, _homeStartBlock);
   }
 
-  function removeBridgeMapping(address _foreignToken) public onlyOwner {
-    require(_foreignToken != address(0));
-    setHomeTokenByForeignToken(_foreignToken, address(0));
-    setForeignBridgeByForeignToken(_foreignToken, address(0));
-    setHomeBridgeByForeignToken(_foreignToken, address(0));
-    setForeignStartBlockByForeignToken(_foreignToken, 0);
-    setHomeStartBlockByForeignToken(_foreignToken, 0);
-    emit BridgeMappingUpdated(_foreignToken, address(0), address(0), address(0), 0, 0);
+  function removeBridgeMapping(bytes32 _key) public onlyOwner {
+    setHomeTokenByKey(_key, address(0));
+    setForeignTokenByKey(_key, address(0));
+    setForeignBridgeByKey(_key, address(0));
+    setHomeBridgeByKey(_key, address(0));
+    setForeignStartBlockByKey(_key, 0);
+    setHomeStartBlockByKey(_key, 0);
+    emit BridgeMappingUpdated(_key, address(0), address(0), address(0), address(0), 0, 0);
   }
 
   function getBridgeMapperVersion() public pure returns(uint64 major, uint64 minor, uint64 patch) {
-    return (2, 2, 0);
+    return (3, 0, 0);
   }
 
   function initialize(address _owner) public returns(bool) {
