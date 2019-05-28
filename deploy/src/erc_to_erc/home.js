@@ -150,17 +150,17 @@ async function deployHome() {
   homeNonce++
 
   console.log('making homeBridge contract minter of the  Bridgeble token')
-  const txOwnershipData = await erc677token.methods
+  const addMinterData = await erc677token.methods
     .addMinter(homeBridgeStorage.options.address)
     .encodeABI({ from: DEPLOYMENT_ACCOUNT_ADDRESS })
-  const txOwnership = await sendRawTxHome({
-    data: txOwnershipData,
+  const txAddMinter = await sendRawTxHome({
+    data: addMinterData,
     nonce: homeNonce,
     to: erc677token.options.address,
     privateKey: deploymentPrivateKey,
     url: HOME_RPC_URL
   })
-  assert.strictEqual(Web3Utils.hexToNumber(txOwnership.status), 1, 'Transaction Failed')
+  assert.strictEqual(Web3Utils.hexToNumber(txAddMinter.status), 1, 'Transaction Failed')
   homeNonce++
 
   console.log('\ninitializing Home Bridge with following parameters:\n')
