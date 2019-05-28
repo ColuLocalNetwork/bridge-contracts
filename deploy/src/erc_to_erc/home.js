@@ -149,9 +149,9 @@ async function deployHome() {
   assert.strictEqual(Web3Utils.hexToNumber(setBridgeContract.status), 1, 'Transaction Failed')
   homeNonce++
 
-  console.log('transferring ownership of Bridgeble token to homeBridge contract')
+  console.log('making homeBridge contract minter of the  Bridgeble token')
   const txOwnershipData = await erc677token.methods
-    .transferOwnership(homeBridgeStorage.options.address)
+    .addMinter(homeBridgeStorage.options.address)
     .encodeABI({ from: DEPLOYMENT_ACCOUNT_ADDRESS })
   const txOwnership = await sendRawTxHome({
     data: txOwnershipData,
