@@ -248,7 +248,7 @@ async function deployForeign() {
 
   console.log('transferring ownership of ERC677BridgeToken token to foreignBridge contract')
   const txOwnershipData = await erc677bridgeToken.methods
-    .transferOwnership(foreignBridgeStorage.options.address)
+    .addMinter(foreignBridgeStorage.options.address)
     .encodeABI({ from: DEPLOYMENT_ACCOUNT_ADDRESS })
   const txOwnership = await sendRawTxForeign({
     data: txOwnershipData,
