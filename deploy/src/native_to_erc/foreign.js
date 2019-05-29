@@ -246,18 +246,18 @@ async function deployForeign() {
     foreignNonce++
   }
 
-  console.log('transferring ownership of ERC677BridgeToken token to foreignBridge contract')
-  const txOwnershipData = await erc677bridgeToken.methods
+  console.log('adding foreignBridge contract as ERC677BridgeToken minter')
+  const txAddMinterData = await erc677bridgeToken.methods
     .addMinter(foreignBridgeStorage.options.address)
     .encodeABI({ from: DEPLOYMENT_ACCOUNT_ADDRESS })
-  const txOwnership = await sendRawTxForeign({
-    data: txOwnershipData,
+  const txAddMinter = await sendRawTxForeign({
+    data: txAddMinterData,
     nonce: foreignNonce,
     to: erc677bridgeToken.options.address,
     privateKey: deploymentPrivateKey,
     url: FOREIGN_RPC_URL
   })
-  assert.strictEqual(Web3Utils.hexToNumber(txOwnership.status), 1, 'Transaction Failed')
+  assert.strictEqual(Web3Utils.hexToNumber(txAddMinter.status), 1, 'Transaction Failed')
   foreignNonce++
 
   const bridgeOwnershipData = await foreignBridgeStorage.methods

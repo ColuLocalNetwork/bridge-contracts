@@ -149,7 +149,7 @@ async function deployHome() {
   assert.strictEqual(Web3Utils.hexToNumber(setBridgeContract.status), 1, 'Transaction Failed')
   homeNonce++
 
-  console.log('making homeBridge contract minter of the  Bridgeble token')
+  console.log('adding homeBridge contract as ERC677BridgeToken minter')
   const addMinterData = await erc677token.methods
     .addMinter(homeBridgeStorage.options.address)
     .encodeABI({ from: DEPLOYMENT_ACCOUNT_ADDRESS })
