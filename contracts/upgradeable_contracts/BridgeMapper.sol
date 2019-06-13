@@ -2,6 +2,7 @@ pragma solidity 0.4.24;
 
 import "./EternalOwnable.sol";
 import "../upgradeability/EternalStorage.sol";
+import "../libraries/Message.sol";
 
 contract BridgeMapper is EternalStorage, EternalOwnable {
 
@@ -55,6 +56,14 @@ contract BridgeMapper is EternalStorage, EternalOwnable {
     uintStorage[keccak256(abi.encodePacked("foreignStartBlockByKey", _key))] = _foreignStartBlock;
   }
 
+  function hashedTxs(bytes32 _hashTx) public view returns(bool) {
+    return boolStorage[keccak256(abi.encodePacked("hashedTxs", _hashTx))];
+  }
+
+  function setHashedTxs(bytes32 _hashTx, bool _isExising) internal {
+    boolStorage[keccak256(abi.encodePacked("hashedTxs", _hashTx))] = _isExising;
+  }
+
   function setInitialize(bool _status) internal { 
     boolStorage[keccak256(abi.encodePacked("isInitialized"))] = _status; 
   }
@@ -62,8 +71,14 @@ contract BridgeMapper is EternalStorage, EternalOwnable {
   function isInitialized() public view returns(bool) { 
     return boolStorage[keccak256(abi.encodePacked("isInitialized"))]; 
   }
+  
 
-  function addBridgeMapping(bytes32 _key, address _foreignToken, address _homeToken, address _foreignBridge, address _homeBridge, uint256 _foreignStartBlock, uint256 _homeStartBlock) public onlyOwner {
+    function getAddBridgeMappingHash(bytes32 _key, address _foreignToken, address _homeToken, address _foreignBridge, address _homeBridge, uint256 _foreignStartBlock, uint256 _homeStartBlock) public pure returns (bytes32) {
+    /* "23d122d7": getAddBridgeMappingHash(bytes32,address,address,address,address,uint256,uint256) */
+    return keccak256(abi.encodePacked(bytes4(0x23d122d7), _key, _foreignToken, _homeToken, _foreignBridge, _homeBridge, _foreignStartBlock, _homeStartBlock));
+  }
+
+  function addBridgeMapping(bytes32 _key, address _foreignToken, address _homeToken, address _foreignBridge, address _homeBridge, uint256 _foreignStartBlock, uint256 _homeStartBlock, bytes _signature) public {
     require(_key != bytes32(0));
     require(_foreignToken != address(0));
     require(_homeToken != address(0));
@@ -71,6 +86,18 @@ contract BridgeMapper is EternalStorage, EternalOwnable {
     require(_homeBridge != address(0));
     require(_foreignStartBlock > 0);
     require(_homeStartBlock > 0);
+
+    if (msg.sender != owner()) {
+      bytes32 hashedParams = getAddBridgeMappingHash(_key, _foreignToken, _homeToken, _foreignBridge, _homeBridge, _foreignStartBlock, _homeStartBlock);
+      address from = Message.recover(hashedParams, _signature);
+      require(from == owner(), "Invalid from address recovered");
+
+        bytes32 hashedTx = keccak256(abi.encodePacked(from, hashedParams));
+        require(hashedTxs(hashedTx) == false, "Transaction hash was already used");
+
+        setHashedTxs(hashedTx, true);
+    }
+
     setHomeTokenByKey(_key, _homeToken);
     setForeignTokenByKey(_key, _foreignToken);
     setForeignBridgeByKey(_key, _foreignBridge);
@@ -91,7 +118,7 @@ contract BridgeMapper is EternalStorage, EternalOwnable {
   }
 
   function getBridgeMapperVersion() public pure returns(uint64 major, uint64 minor, uint64 patch) {
-    return (3, 0, 0);
+    return (3, 1, 0);
   }
 
   function initialize(address _owner) public returns(bool) {

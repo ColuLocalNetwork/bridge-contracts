@@ -61,7 +61,7 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         setOwner(_owner); // set to the real owner.
     }
 
-    function deployHomeBridge(string _tokenName, string _tokenSymbol, uint8 _tokenDecimals) public onlyOwner {
+    function deployHomeBridge(string _tokenName, string _tokenSymbol, uint8 _tokenDecimals) public {
         // deploy new EternalStorageProxy
         EternalStorageProxy proxy = new EternalStorageProxy();
         // connect it to the static BridgeValidators implementation

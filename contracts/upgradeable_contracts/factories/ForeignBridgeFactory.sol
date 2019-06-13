@@ -56,7 +56,7 @@ contract ForeignBridgeFactory is BasicBridgeFactory {
         return isInitialized();
     }
 
-    function deployForeignBridge(address _erc20Token) public onlyOwner {
+    function deployForeignBridge(address _erc20Token) public {
         // deploy new EternalStorageProxy
         EternalStorageProxy proxy = new EternalStorageProxy();
         // connect it to the static BridgeValidators implementation
