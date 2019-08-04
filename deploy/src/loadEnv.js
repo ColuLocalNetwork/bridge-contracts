@@ -22,7 +22,7 @@ const addressesValidator = envalid.makeValidator(addresses => {
   return addresses
 })
 
-const { BRIDGE_MODE } = process.env
+const { BRIDGE_MODE, DEPLOY_REWARDABLE_TOKEN } = process.env
 
 if (!validBridgeModes.includes(BRIDGE_MODE)) {
   throw new Error(`Invalid bridge mode: ${BRIDGE_MODE}`)
@@ -59,12 +59,19 @@ if (BRIDGE_MODE === 'NATIVE_TO_ERC') {
     BRIDGEABLE_TOKEN_NAME: envalid.str(),
     BRIDGEABLE_TOKEN_SYMBOL: envalid.str(),
     BRIDGEABLE_TOKEN_DECIMALS: envalid.num(),
+    BRIDGEABLE_TOKEN_PRE_MINTED: envalid.bool(),
+    BRIDGEABLE_TOKEN_INITIAL_SUPPLY_ETH: envalid.num(),
     FOREIGN_DAILY_LIMIT: bigNumValidator(),
     FOREIGN_MAX_AMOUNT_PER_TX: bigNumValidator(),
     FOREIGN_MIN_AMOUNT_PER_TX: bigNumValidator(),
-    DEPLOY_REWARDABLE_TOKEN: envalid.bool(),
-    DPOS_VALIDATOR_SET_ADDRESS: addressValidator(),
-    BLOCK_REWARD_ADDRESS: addressValidator()
+    DEPLOY_REWARDABLE_TOKEN: envalid.bool()
+  }
+  if (DEPLOY_REWARDABLE_TOKEN == true) {
+    validations = {
+      ...validations,
+      DPOS_VALIDATOR_SET_ADDRESS: addressValidator(),
+      BLOCK_REWARD_ADDRESS: addressValidator()
+    }
   }
 }
 if (BRIDGE_MODE === 'ERC_TO_ERC') {

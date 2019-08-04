@@ -21,7 +21,8 @@ contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBr
         uint256 _requiredBlockConfirmations,
         uint256 _homeDailyLimit,
         uint256 _homeMaxPerTx,
-        address _owner
+        address _owner,
+        bool _erc677tokenPreMinted
     ) public returns(bool) {
         require(!isInitialized());
         require(_validatorContract != address(0) && isContract(_validatorContract));
@@ -39,6 +40,7 @@ contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBr
         uintStorage[keccak256(abi.encodePacked("requiredBlockConfirmations"))] = _requiredBlockConfirmations;
         uintStorage[keccak256(abi.encodePacked("executionDailyLimit"))] = _homeDailyLimit;
         uintStorage[keccak256(abi.encodePacked("executionMaxPerTx"))] = _homeMaxPerTx;
+        boolStorage[keccak256(abi.encodePacked("erc677tokenPreMinted"))] = _erc677tokenPreMinted;
         setOwner(_owner);
         setInitialize(true);
         return isInitialized();
@@ -54,6 +56,9 @@ contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBr
 
     function onExecuteMessage(address _recipient, uint256 _amount) internal returns(bool){
         setTotalExecutedPerDay(getCurrentDay(), totalExecutedPerDay(getCurrentDay()).add(_amount));
+        if (boolStorage[keccak256(abi.encodePacked("erc677tokenPreMinted"))]) {
+            return erc677token().transfer(_recipient, _amount);
+        }
         return erc677token().mint(_recipient, _amount);
     }
 

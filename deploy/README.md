@@ -55,6 +55,10 @@ BRIDGEABLE_TOKEN_SYMBOL=TEST
 # The number of supportable decimal digits after the "point" in the ERC677 token
 # to be deployed on the Foreign network.
 BRIDGEABLE_TOKEN_DECIMALS=18
+# The ERC677 is minted after its deployment and locked/unlocked in the Foreign bridge instead of minted/burnt
+BRIDGEABLE_TOKEN_PRE_MINTED=true
+# The initial supply (in ETH) of the ERC677 token to be minted on the Foregin bridge
+BRIDGEABLE_TOKEN_INITIAL_SUPPLY_ETH=300000000000000000000000000
 
 # The RPC channel to a Home node able to handle deployment/configuration
 # transactions.

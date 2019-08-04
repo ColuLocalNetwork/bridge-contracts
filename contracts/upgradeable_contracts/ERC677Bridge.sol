@@ -18,7 +18,9 @@ contract ERC677Bridge is BasicBridge {
         require(msg.sender == address(erc677token()));
         require(withinLimit(_value));
         setTotalSpentPerDay(getCurrentDay(), totalSpentPerDay(getCurrentDay()).add(_value));
-        erc677token().burn(_value);
+        if (!boolStorage[keccak256(abi.encodePacked("erc677tokenPreMinted"))]) {
+            erc677token().burn(_value);
+        }
         fireEventOnTokenTransfer(_from, _value);
         return true;
     }

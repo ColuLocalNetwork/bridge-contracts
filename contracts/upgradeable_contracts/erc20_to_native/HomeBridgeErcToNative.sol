@@ -6,7 +6,6 @@ import "../../upgradeability/EternalStorage.sol";
 import "../../IBlockReward.sol";
 import "../../ERC677Receiver.sol";
 import "../BasicHomeBridge.sol";
-import "../ERC677Bridge.sol";
 import "../OverdrawManagement.sol";
 
 

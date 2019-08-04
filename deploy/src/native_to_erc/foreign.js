@@ -27,6 +27,8 @@ const {
   BRIDGEABLE_TOKEN_NAME,
   BRIDGEABLE_TOKEN_SYMBOL,
   BRIDGEABLE_TOKEN_DECIMALS,
+  BRIDGEABLE_TOKEN_PRE_MINTED,
+  BRIDGEABLE_TOKEN_INITIAL_SUPPLY_ETH,
   HOME_DAILY_LIMIT,
   HOME_MAX_AMOUNT_PER_TX,
   DEPLOY_REWARDABLE_TOKEN,
@@ -42,14 +44,14 @@ async function deployForeign() {
   console.log('deploying ForeignBridge')
   console.log('========================================\n')
 
-  console.log('\n[Foreign] deploying BRIDGEABLE_TOKEN_SYMBOL token')
+  console.log(`\n[Foreign] deploying ${BRIDGEABLE_TOKEN_SYMBOL} token`)
   const erc677bridgeToken = await deployContract(
     DEPLOY_REWARDABLE_TOKEN ? ERC677BridgeTokenRewardable : ERC677BridgeToken,
     [BRIDGEABLE_TOKEN_NAME, BRIDGEABLE_TOKEN_SYMBOL, BRIDGEABLE_TOKEN_DECIMALS],
     { from: DEPLOYMENT_ACCOUNT_ADDRESS, network: 'foreign', nonce: foreignNonce }
   )
   foreignNonce++
-  console.log('[Foreign] BRIDGEABLE_TOKEN_SYMBOL: ', erc677bridgeToken.options.address)
+  console.log(`[Foreign] ERC677BridgeToken: ${erc677bridgeToken.options.address}`)
 
   console.log('deploying storage for foreign validators')
   const storageValidatorsForeign = await deployContract(EternalStorageProxy, [], {
@@ -189,7 +191,8 @@ async function deployForeign() {
       FOREIGN_REQUIRED_BLOCK_CONFIRMATIONS,
       HOME_DAILY_LIMIT,
       HOME_MAX_AMOUNT_PER_TX,
-      FOREIGN_BRIDGE_OWNER
+      FOREIGN_BRIDGE_OWNER,
+      BRIDGEABLE_TOKEN_PRE_MINTED
     )
     .encodeABI({ from: DEPLOYMENT_ACCOUNT_ADDRESS })
   const txInitializeBridge = await sendRawTxForeign({
@@ -246,20 +249,37 @@ async function deployForeign() {
     foreignNonce++
   }
 
-  console.log('adding foreignBridge contract as ERC677BridgeToken minter')
-  const txAddMinterData = await erc677bridgeToken.methods
-    .addMinter(foreignBridgeStorage.options.address)
-    .encodeABI({ from: DEPLOYMENT_ACCOUNT_ADDRESS })
-  const txAddMinter = await sendRawTxForeign({
-    data: txAddMinterData,
-    nonce: foreignNonce,
-    to: erc677bridgeToken.options.address,
-    privateKey: deploymentPrivateKey,
-    url: FOREIGN_RPC_URL
-  })
-  assert.strictEqual(Web3Utils.hexToNumber(txAddMinter.status), 1, 'Transaction Failed')
-  foreignNonce++
+  if (BRIDGEABLE_TOKEN_PRE_MINTED) {
+    console.log('\nminting ERC677BridgeToken on foreignBridge contract\n')
+    const txMintOnForeignBridgeData = await erc677bridgeToken.methods
+      .mint(foreignBridgeStorage.options.address, Web3Utils.toWei(BRIDGEABLE_TOKEN_INITIAL_SUPPLY_ETH.toString()))
+      .encodeABI({ from: DEPLOYMENT_ACCOUNT_ADDRESS })
+    const txMintOnForeignBridge = await sendRawTxForeign({
+      data: txMintOnForeignBridgeData,
+      nonce: foreignNonce,
+      to: erc677bridgeToken.options.address,
+      privateKey: deploymentPrivateKey,
+      url: FOREIGN_RPC_URL
+    })
+    assert.strictEqual(Web3Utils.hexToNumber(txMintOnForeignBridge.status), 1, 'Transaction Failed')
+    foreignNonce++
+  } else {
+    console.log('\nadding foreignBridge contract as ERC677BridgeToken minter\n')
+    const txAddMinterData = await erc677bridgeToken.methods
+      .addMinter(foreignBridgeStorage.options.address)
+      .encodeABI({ from: DEPLOYMENT_ACCOUNT_ADDRESS })
+    const txAddMinter = await sendRawTxForeign({
+      data: txAddMinterData,
+      nonce: foreignNonce,
+      to: erc677bridgeToken.options.address,
+      privateKey: deploymentPrivateKey,
+      url: FOREIGN_RPC_URL
+    })
+    assert.strictEqual(Web3Utils.hexToNumber(txAddMinter.status), 1, 'Transaction Failed')
+    foreignNonce++
+  }
 
+  console.log('\nTransferring ownership of ForeignBridge\n')
   const bridgeOwnershipData = await foreignBridgeStorage.methods
     .transferProxyOwnership(FOREIGN_UPGRADEABLE_ADMIN)
     .encodeABI({ from: DEPLOYMENT_ACCOUNT_ADDRESS })
